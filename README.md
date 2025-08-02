@@ -28,8 +28,9 @@ Account portal for a fantasy MMORPG — login, registration, and item shop with 
 ## Tech Stack
 
 - HTML / CSS (handwritten)
-- Vanilla JavaScript
-- Node.js + Express (WIP)
+- jQuery
+- Node.js + Express
 - MySQL for storing user and item data
+
 
 
