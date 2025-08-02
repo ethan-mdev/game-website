@@ -2,7 +2,7 @@ body {
     margin: 0;
     background-color: #f9fafb;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: #333;
+    color: #ffffff;
     text-align: center;
 }
 
@@ -38,8 +38,8 @@ nav.scrolled a:hover {
 nav a {
     margin-left: 1.5rem;
     text-decoration: none;
-    color: #ffffff;
     font-weight: 400;
+    color: #ffffff;
 }
 
 a:hover {
@@ -56,7 +56,6 @@ a:hover {
     align-items: center;
     justify-content: center;
     text-align: center;
-    color: white;
     overflow: hidden;
 }
 
@@ -88,6 +87,7 @@ a:hover {
     gap: 2rem;
     max-width: 80%;
     width: 100%;
+    color: #333333;
 }
 
 .card {
@@ -144,7 +144,6 @@ a:hover {
 /* Footer Styles */
 .footer {
     background-color: #1a2036;
-    color: #95a5a6;
     padding: 3rem 2rem 1rem;
     margin-top: 4rem;
 }
@@ -165,7 +164,6 @@ a:hover {
 
 .footer-column h4 {
     margin-bottom: 1rem;
-    color: #ecf0f1;
     font-size: 1.2rem;
 }
 
@@ -180,8 +178,8 @@ a:hover {
 }
 
 .footer-column ul li a {
-    color: #bdc3c7;
     text-decoration: none;
+    color: #ffffff;
     transition: color 0.3s ease;
 }
 
