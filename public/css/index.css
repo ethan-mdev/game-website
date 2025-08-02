@@ -52,7 +52,6 @@ a:hover {
 
 .hero {
     height: 100vh;
-    background-image: url('../images/hero-section.png');
     background-size: cover;
     background-position: center;
     position: relative;
@@ -67,15 +66,54 @@ a:hover {
     content: '';
     position: absolute;
     inset: 0;
-    backdrop-filter: blur(3px);
-    background-color: rgba(0, 0, 0, 0.4);
-    z-index: 1;
+    background-image: url('../images/hero-section.png');
+    background-size: cover;
+    background-position: center;
+    animation: slideshow1 24s infinite;
+    z-index: 0;
+}
+
+.hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url('../images/hero-section2.png');
+    background-size: cover;
+    background-position: center;
+    animation: slideshow2 24s infinite;
+    z-index: 0;
+}
+
+@keyframes slideshow1 {
+    0% { opacity: 1; }
+    40% { opacity: 1; }
+    50% { opacity: 0; }
+    90% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+@keyframes slideshow2 {
+    0% { opacity: 0; }
+    40% { opacity: 0; }
+    50% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { opacity: 0; }
 }
 
 .hero-content {
     position: relative;
     z-index: 2;
     padding: 2rem;
+}
+
+.hero-overlay {
+    content: '';
+    position: absolute;
+    inset: 0;
+    backdrop-filter: blur(3px);
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 1;
+    pointer-events: none;
 }
 
 .scroll-down {

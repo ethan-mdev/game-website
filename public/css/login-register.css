@@ -14,7 +14,16 @@ body {
     background-image: url('../images/hero-section.png');
     background-size: cover;
     background-position: center;
+    position: relative;
+}
+
+.wrapper-overlay {
+    position: fixed;
+    inset: 0;
+    backdrop-filter: blur(3px);
     background-color: rgba(0, 0, 0, 0.4);
+    z-index: 1;
+    pointer-events: none;
 }
 
 .wrapper {
@@ -28,6 +37,8 @@ body {
     background-color: rgba(255, 255, 255, 0.07);
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    z-index: 2;
 }
 
 .wrapper h1 {
