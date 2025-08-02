@@ -23,13 +23,22 @@ body {
     border-radius: 10px;
     padding: 30px 40px;
     border: 2px solid #ffffff;
-    backdrop-filter: blur(20px);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(12px) brightness(0.85) saturate(1.2);
+    animation: pulseGlow 4s ease-in-out infinite;
+    background-color: rgba(255, 255, 255, 0.07);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .wrapper h1 {
-    font-size: 28px;
+    font-size: 2rem;
     text-align: center;
+    background: linear-gradient(90deg, #ffc3a0, #ff7eb3);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    /* for Firefox */
+    color: transparent;
 }
 
 .wrapper .input-box {
@@ -96,7 +105,7 @@ body {
 }
 
 .wrapper .btn:hover {
-    color: #3498db;
+    color: #6a5acd;
 }
 
 .wrapper .register-link {
@@ -112,5 +121,22 @@ body {
 }
 
 .register-link a:hover {
-    color: #3498db;
+    color: #6a5acd;
+}
+
+@keyframes pulseGlow {
+    0% {
+        box-shadow: 0 0 10px rgba(255, 200, 255, 0.05),
+            0 0 20px rgba(255, 200, 255, 0.05) inset;
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(255, 200, 255, 0.1),
+            0 0 30px rgba(255, 200, 255, 0.12) inset;
+    }
+
+    100% {
+        box-shadow: 0 0 10px rgba(255, 200, 255, 0.05),
+            0 0 20px rgba(255, 200, 255, 0.05) inset;
+    }
 }

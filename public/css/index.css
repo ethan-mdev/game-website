@@ -1,3 +1,7 @@
+html {
+  scroll-behavior: smooth;
+}
+
 body {
     margin: 0;
     background-color: #f9fafb;
@@ -32,7 +36,7 @@ nav.scrolled a {
 }
 
 nav.scrolled a:hover {
-    color: #3498db;
+    color: #6a5acd;
 }
 
 nav a {
@@ -43,7 +47,7 @@ nav a {
 }
 
 a:hover {
-    color: #3498db;
+    color: #6a5acd;
 }
 
 .hero {
@@ -74,6 +78,44 @@ a:hover {
     padding: 2rem;
 }
 
+.scroll-down {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 2.5rem;
+  color: white;
+  text-decoration: none;
+  transition: opacity 0.3s ease;
+  z-index: 10;
+}
+
+.bounce {
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-10px);
+  }
+}
+
+main {
+    color: #333333;
+}
+
+main h1 {
+    font-size: 3rem;
+    background: linear-gradient(90deg, #ff6f61, #6a5acd);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text; /* for Firefox */
+    color: transparent;
+}
+
 .feature-section {
     display: flex;
     justify-content: center;
@@ -87,7 +129,6 @@ a:hover {
     gap: 2rem;
     max-width: 80%;
     width: 100%;
-    color: #333333;
 }
 
 .card {
@@ -101,6 +142,10 @@ a:hover {
     transition: box-shadow 0.3s ease;
 }
 
+.card p {
+    font-size: 14px;
+}
+
 @property --angle{
     syntax: "<angle>";
     initial-value: 0deg;
@@ -109,6 +154,13 @@ a:hover {
 
 .card:hover {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.card img {
+    width: 32px;
+    height: 32px;
+    margin: 1rem auto;
+    display: block;
 }
 
 /* card animation - credit https://www.youtube.com/watch?v=ezP4kbOvs_E */
@@ -123,8 +175,8 @@ a:hover {
     z-index: -1;
     padding: 3px;
     border-radius: 10px;
-    background-image: conic-gradient(from var(--angle) ,transparent 95%, blue, pink);
-    animation: 6s spin linear infinite;
+    background-image: conic-gradient(from var(--angle) ,transparent 95%, #e66465, #9198e5);
+    animation: 20s spin linear infinite;
 }
 
 .card::before{
@@ -184,7 +236,7 @@ a:hover {
 }
 
 .footer-column ul li a:hover {
-    color: #3498db;
+    color: #6a5acd;
 }
 
 .footer-bottom {
