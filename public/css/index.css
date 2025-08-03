@@ -182,7 +182,7 @@ main h1 {
 
 .card p {
     font-size: 14px;
-    color:
+    color: #666666;
 }
 
 @property --angle{
