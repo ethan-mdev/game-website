@@ -1,46 +1,62 @@
-# Astro Starter Kit: Basics
+# 🎮 Game Web Store Demo
 
-```sh
-npm create astro@latest -- --template basics
+A web-based store system for online games, built with Astro and SQL Server. This is a **demonstration project** for educational purposes.
+
+## ⚠️ Demo Notice
+
+This is a **non-functional demo** that showcases the store and forum architecture only. Game server integration has been removed.
+
+## 🛠️ Technologies
+
+- **Astro** - Web framework
+- **TypeScript** - Type safety
+- **SQL Server** - Database
+- **Tailwind CSS** - Styling
+
+## 📁 What's Included
+
+- User authentication and sessions
+- Store item browsing and purchasing
+- Credit system with transactions
+- Purchase history tracking
+- Forum with roles and moderation
+
+## 🔧 Setup
+
+```bash
+# Install dependencies
+npm install
+
+# Setup database (run the DDL script)
+sqlcmd -S localhost -U sa -P YourPassword -i database/store-schema.sql
+
+# Configure environment
+touch .env
+# Edit .env with your credentials
+
+# Run dev server
+npm run dev
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## 🎯 Integration Points
 
-## 🚀 Project Structure
+This demo shows the **store layer only**. To make it functional, you would need to:
 
-Inside of your Astro project, you'll see the following folders and files:
+1. Connect to your game's database
+2. Implement account creation during registration
+3. Add item delivery system after purchases
+4. Load character data from game server
+5. Implement game-specific features (leaderboards, etc.)
 
-```text
-/
-├── public/
-│   └── favicon.svg
-├── src
-│   ├── assets
-│   │   └── astro.svg
-│   ├── components
-│   │   └── Welcome.astro
-│   ├── layouts
-│   │   └── Layout.astro
-│   └── pages
-│       └── index.astro
-└── package.json
-```
+See inline comments in API files for integration suggestions.
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+## 📸 Screenshots
 
-## 🧞 Commands
 
-All commands are run from the root of the project, from a terminal:
+## 📝 Note
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+This code is provided **as-is for educational purposes**. It is not production-ready and requires significant integration work to function with a real game server.
 
-## 👀 Want to learn more?
+---
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+**Not affiliated with any specific game or company.**
