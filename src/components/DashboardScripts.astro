@@ -1,0 +1,904 @@
+---
+interface Props {
+  username: string;
+  currentAvatar: string;
+  account_balance: number;
+}
+
+const { username, currentAvatar, account_balance } = Astro.props;
+---
+
+<script is:inline define:vars={{ username, currentAvatar, account_balance }}>
+  // Mobile menu toggle
+  const mobileToggle = document.getElementById('mobile-menu-toggle');
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('mobile-overlay');
+
+  mobileToggle.addEventListener('click', () => {
+    sidebar.classList.toggle('-translate-x-full');
+    overlay.classList.toggle('hidden');
+  });
+
+  overlay.addEventListener('click', () => {
+    sidebar.classList.add('-translate-x-full');
+    overlay.classList.add('hidden');
+  });
+
+  // Panel navigation
+  const navBtns = document.querySelectorAll('.nav-btn');
+  const panels = document.querySelectorAll('main > section');
+
+  navBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const panelId = `panel-${btn.dataset.panel}`;
+      
+      // Update button states
+      navBtns.forEach(b => {
+        b.setAttribute('aria-selected', 'false');
+        b.className = b.className.replace(/bg-purple-\d+.*?transition-colors/, 'text-gray-300 hover:bg-neutral-700 transition-colors');
+      });
+      
+      btn.setAttribute('aria-selected', 'true');
+      btn.className = btn.className.replace(/text-gray-300.*?transition-colors/, 'bg-purple-500 text-white hover:bg-purple-400 transition-colors');
+      
+      // Show/hide panels
+      panels.forEach(panel => {
+        panel.classList.add('hidden');
+      });
+      
+      document.getElementById(panelId)?.classList.remove('hidden');
+    });
+  });
+
+  // Sign out modal
+  const signOutBtn = document.getElementById('sign-out-btn');
+  const signOutModal = document.getElementById('signout-modal');
+  const cancelSignOut = document.getElementById('cancel-signout');
+  const confirmSignOut = document.getElementById('confirm-signout');
+
+  signOutBtn.addEventListener('click', () => {
+    signOutModal.classList.remove('hidden');
+  });
+
+  cancelSignOut.addEventListener('click', () => {
+    signOutModal.classList.add('hidden');
+  });
+
+  confirmSignOut.addEventListener('click', async () => {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+    } catch (e) {
+      console.warn('Logout request failed:', e);
+    } finally {
+      window.location.href = '/login';
+    }
+  });
+
+  // Unstuck modal functionality
+  const unstuckModal = document.getElementById('unstuck-modal');
+  const unstuckCharacterName = document.getElementById('unstuck-character-name');
+  const cancelUnstuck = document.getElementById('cancel-unstuck');
+  const confirmUnstuck = document.getElementById('confirm-unstuck');
+  let currentUnstuckButton = null;
+  let currentCharacterName = null;
+
+  // Updated unstuck button functionality
+  document.querySelectorAll('.unstuck-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      currentCharacterName = btn.dataset.character;
+      currentUnstuckButton = btn;
+      unstuckCharacterName.textContent = currentCharacterName;
+      unstuckModal.classList.remove('hidden');
+    });
+  });
+
+  cancelUnstuck.addEventListener('click', () => {
+    unstuckModal.classList.add('hidden');
+    currentUnstuckButton = null;
+    currentCharacterName = null;
+  });
+
+  confirmUnstuck.addEventListener('click', async () => {
+    if (!currentUnstuckButton || !currentCharacterName) return;
+
+    const btn = currentUnstuckButton;
+    const originalText = btn.textContent;
+    
+    btn.textContent = 'Processing...';
+    btn.disabled = true;
+    unstuckModal.classList.add('hidden');
+    
+    try {
+      const res = await fetch('/api/game/unstuck', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ character: currentCharacterName })
+      });
+      
+      if (res.ok) {
+        btn.textContent = 'Complete!';
+        btn.classList.remove('bg-purple-500', 'hover:bg-purple-400');
+        btn.classList.add('bg-green-500', 'hover:bg-green-500');
+      } else {
+        btn.textContent = 'Failed';
+        btn.classList.remove('bg-purple-500', 'hover:bg-purple-400');
+        btn.classList.add('bg-red-500', 'hover:bg-red-500');
+      }
+    } catch (err) {
+      btn.textContent = 'Error';
+      btn.classList.remove('bg-purple-500', 'hover:bg-purple-400');
+      btn.classList.add('bg-red-500', 'hover:bg-red-500');
+    }
+    
+    setTimeout(() => {
+      btn.textContent = originalText;
+      btn.disabled = false;
+      btn.classList.remove('bg-green-500', 'hover:bg-green-500', 'bg-red-500', 'hover:bg-red-500');
+      btn.classList.add('bg-purple-500', 'hover:bg-purple-400');
+    }, 3000);
+
+    currentUnstuckButton = null;
+    currentCharacterName = null;
+  });
+
+  // Profile image modal functionality
+  const profileBtn = document.getElementById('profile-image-btn');
+  const profileModal = document.getElementById('profile-modal');
+  const cancelProfile = document.getElementById('cancel-profile');
+  const saveProfile = document.getElementById('save-profile');
+  const profileOptions = document.querySelectorAll('.profile-option');
+  let selectedAvatar = null;
+
+  profileBtn.addEventListener('click', () => {
+    profileModal.classList.remove('hidden');
+  });
+
+  cancelProfile.addEventListener('click', () => {
+    profileModal.classList.add('hidden');
+    selectedAvatar = null;
+    saveProfile.disabled = true;
+    // Reset selection styles
+    profileOptions.forEach(opt => {
+      opt.classList.remove('border-purple-500', 'ring-2', 'ring-purple-500/50');
+      opt.classList.add('border-neutral-700');
+    });
+  });
+
+  profileOptions.forEach(option => {
+    option.addEventListener('click', () => {
+      selectedAvatar = option.dataset.avatar;
+      saveProfile.disabled = false;
+      
+      // Update selection styles
+      profileOptions.forEach(opt => {
+        opt.classList.remove('border-purple-500', 'ring-2', 'ring-purple-500/50');
+        opt.classList.add('border-neutral-700');
+      });
+      
+      option.classList.remove('border-neutral-700');
+      option.classList.add('border-purple-500', 'ring-2', 'ring-purple-500/50');
+    });
+  });
+
+  saveProfile.addEventListener('click', async () => {
+    if (!selectedAvatar) return;
+
+    const originalText = saveProfile.textContent;
+    saveProfile.textContent = 'Saving...';
+    saveProfile.disabled = true;
+
+    try {
+      const res = await fetch('/api/user/update-profile-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profileImage: selectedAvatar })
+      });
+
+      if (res.ok) {
+        // Update the profile image in the header
+        const profileImg = profileBtn.querySelector('img');
+        profileImg.src = `/avatars/${selectedAvatar}`;
+        profileModal.classList.add('hidden');
+      } else {
+        alert('Failed to update profile image');
+      }
+    } catch (err) {
+      alert('Error updating profile image');
+    } finally {
+      saveProfile.textContent = originalText;
+      saveProfile.disabled = false;
+      selectedAvatar = null;
+    }
+  });
+
+  // Purchase modal functionality
+  const purchaseModal = document.getElementById('purchase-modal');
+  const cancelPurchase = document.getElementById('cancel-purchase');
+  const confirmPurchaseBtn = document.getElementById('confirm-purchase');
+
+  cancelPurchase.addEventListener('click', () => {
+    purchaseModal.classList.add('hidden');
+    window.pendingPurchase = null;
+  });
+
+  confirmPurchaseBtn.addEventListener('click', handlePurchase);
+
+  // Close modal when clicking outside
+  purchaseModal.addEventListener('click', (e) => {
+    if (e.target === purchaseModal) {
+      purchaseModal.classList.add('hidden');
+      window.pendingPurchase = null;
+    }
+  });
+
+  // Success modal functionality
+  const successModal = document.getElementById('success-modal');
+  const closeSuccess = document.getElementById('close-success');
+
+  closeSuccess.addEventListener('click', () => {
+    successModal.classList.add('hidden');
+  });
+
+  // Close success modal when clicking outside
+  successModal.addEventListener('click', (e) => {
+    if (e.target === successModal) {
+      successModal.classList.add('hidden');
+    }
+  });
+
+  // Store functionality
+  let storeItems = [];
+  let currentFilter = 'all';
+  let userBalance = account_balance || 0;
+
+  // Category configurations with colors and display names
+  const categoryConfig = {
+    'buffs': { 
+      color: 'bg-purple-600/20 text-purple-400 border-purple-600/30',
+      displayName: 'Buff'
+    },
+    'consumables': { 
+      color: 'bg-green-600/20 text-green-400 border-green-600/30',
+      displayName: 'Consumable'
+    },
+    'mounts': { 
+      color: 'bg-blue-600/20 text-blue-400 border-blue-600/30',
+      displayName: 'Mount'
+    },
+    'costumes': { 
+      color: 'bg-pink-600/20 text-pink-400 border-pink-600/30',
+      displayName: 'Costume'
+    },
+    'crates': { 
+      color: 'bg-orange-600/20 text-orange-400 border-orange-600/30',
+      displayName: 'Crate'
+    },
+    'bundles': { 
+      color: 'bg-red-600/20 text-red-400 border-red-600/30',
+      displayName: 'Bundle'
+    },
+    'misc': { 
+      color: 'bg-gray-600/20 text-gray-400 border-gray-600/30',
+      displayName: 'Misc'
+    }
+  };
+
+  function getFilteredItems() {
+    if (currentFilter === 'all') return storeItems;
+    return storeItems.filter(item => item.item_type === currentFilter);
+  }
+
+  async function loadStoreItems() {
+    const loading = document.getElementById('store-loading');
+    const itemsGrid = document.getElementById('store-items');
+    const errorDiv = document.getElementById('store-error');
+
+    loading.classList.remove('hidden');
+    itemsGrid.classList.add('hidden');
+    errorDiv.classList.add('hidden');
+
+    try {
+      const res = await fetch('/api/store/items');
+      const data = await res.json();
+
+      if (data.ok) {
+        storeItems = data.items;
+        displayStoreItems(getFilteredItems());
+        loading.classList.add('hidden');
+        itemsGrid.classList.remove('hidden');
+      } else {
+        throw new Error(data.error || 'Failed to load items');
+      }
+    } catch (err) {
+      console.error('Failed to load store items:', err);
+      loading.classList.add('hidden');
+      errorDiv.classList.remove('hidden');
+    }
+  }
+
+  function displayStoreItems(items) {
+    const container = document.getElementById('store-items');
+    
+    if (items.length === 0) {
+      container.innerHTML = '<div class="col-span-full text-center py-12 text-gray-400"><h3 class="text-lg font-semibold mb-2">No items found</h3><p>No items available in this category</p></div>';
+      return;
+    }
+    
+    // Add grid classes when displaying items
+    container.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
+    
+    container.innerHTML = items.map(item => {
+      const config = categoryConfig[item.item_type] || categoryConfig['misc'];
+      const isCrate = item.item_type === 'crates';
+      
+      return `
+        <div class="bg-neutral-900/80 ring-1 ring-neutral-800 rounded-xl p-5 shadow-[0_0_25px_rgba(251,191,36,0.12)]">
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex-1">
+              <h3 class="font-semibold text-gray-200 text-lg mb-2">${item.name}</h3>
+              <span class="inline-block px-3 py-1 text-xs rounded-full border font-medium ${config.color}">
+                ${config.displayName}
+              </span>
+            </div>
+            <div class="text-right">
+              <span class="text-purple-400 font-bold text-lg">${item.price.toLocaleString()}</span>
+              <div class="text-xs text-gray-400">Credits</div>
+            </div>
+          </div>
+          
+          <p class="text-gray-400 text-sm mb-4 min-h-[2.5rem] leading-relaxed">${item.description}</p>
+          
+          ${isCrate ? `
+          <!-- View Contents Button -->
+          <button 
+            class="view-crate-contents-btn w-full bg-sky-500 hover:bg-sky-400 px-4 py-2 rounded-lg text-white font-semibold transition-colors text-sm mb-2"
+            data-crate-id="${item.id}"
+            data-crate-name="${item.name}"
+          >
+            View Contents
+          </button>
+          ` : ''}
+          
+          <!-- Purchase/Open Button -->
+          <button 
+            class="${isCrate ? 'crate-purchase-btn' : 'purchase-btn'} w-full bg-purple-500 hover:bg-purple-400 disabled:bg-neutral-600 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-white font-semibold transition-colors text-sm"
+            data-item-id="${item.id}"
+            data-item-name="${item.name}"
+            data-item-price="${item.price}"
+            data-item-type="${item.item_type}"
+            ${userBalance < item.price ? 'disabled' : ''}
+          >
+            ${userBalance < item.price ? 'Insufficient Credits' : (isCrate ? 'Buy & Open Crate' : 'Purchase')}
+          </button>
+        </div>
+      `;
+    }).join('');
+
+    // Add purchase event listeners
+    container.querySelectorAll('.purchase-btn').forEach(btn => {
+      btn.addEventListener('click', handleDirectPurchase);
+    });
+
+    // Add view crate contents event listeners
+    container.querySelectorAll('.view-crate-contents-btn').forEach(btn => {
+      btn.addEventListener('click', handleViewCrateContents);
+    });
+
+    // Add crate purchase event listeners
+    container.querySelectorAll('.crate-purchase-btn').forEach(btn => {
+      btn.addEventListener('click', handleCratePurchase);
+    });
+  }
+
+  function handleDirectPurchase(e) {
+    const btn = e.target;
+    const itemId = parseInt(btn.dataset.itemId);
+    const itemName = btn.dataset.itemName;
+    const itemPrice = parseInt(btn.dataset.itemPrice);
+
+    if (userBalance < itemPrice) {
+      alert('Insufficient credits for this purchase');
+      return;
+    }
+
+    // Update modal content for single item
+    document.getElementById('purchase-item-name').textContent = itemName;
+    document.getElementById('purchase-quantity').textContent = '1';
+    document.getElementById('purchase-unit-price').textContent = `${itemPrice.toLocaleString()} Credits`;
+    document.getElementById('purchase-total-price').textContent = `${itemPrice.toLocaleString()} Credits`;
+    
+    // Store purchase data for confirmation
+    window.pendingPurchase = { itemId, itemName, quantity: 1, totalPrice: itemPrice, isCrate: false };
+    
+    // Show modal
+    document.getElementById('purchase-modal').classList.remove('hidden');
+  }
+
+  function handleViewCrateContents(e) {
+    const btn = e.target;
+    const crateId = parseInt(btn.dataset.crateId);
+    const crateName = btn.dataset.crateName;
+
+    // Show the crate contents modal
+    const modal = document.getElementById('crate-contents-modal');
+    document.getElementById('crate-contents-title').textContent = crateName;
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+    
+    // Load crate contents (placeholder for now)
+    loadCrateContents(crateId, crateName);
+  }
+
+  async function loadCrateContents(crateId, crateName) {
+    const loadingDiv = document.getElementById('crate-contents-loading');
+    const contentDiv = document.getElementById('crate-contents-list');
+    
+    loadingDiv.classList.remove('hidden');
+    contentDiv.classList.add('hidden');
+
+    try {
+      const response = await fetch(`/api/crate/contents?id=${crateId}`);
+      const data = await response.json();
+      
+      if (data.ok) {
+        displayCrateContents(data.crate.contents);
+        loadingDiv.classList.add('hidden');
+        contentDiv.classList.remove('hidden');
+      } else {
+        throw new Error(data.error || 'Failed to load crate contents');
+      }
+    } catch (error) {
+      console.error('Failed to load crate contents:', error);
+      loadingDiv.classList.add('hidden');
+      
+      // Show error in the modal
+      const container = document.getElementById('crate-contents-items');
+      container.innerHTML = `
+        <div class="col-span-full text-center py-8 text-red-400">
+          <p>Failed to load crate contents</p>
+          <button onclick="loadCrateContents(${crateId}, '${crateName}')" class="mt-2 text-purple-400 hover:text-purple-300">
+            Retry
+          </button>
+        </div>
+      `;
+      contentDiv.classList.remove('hidden');
+    }
+  }
+
+  function displayCrateContents(items) {
+    const container = document.getElementById('crate-contents-items');
+    const rarityColors = {
+      'legendary': 'border-yellow-400 bg-yellow-400/10 text-yellow-400',
+      'epic': 'border-purple-400 bg-purple-400/10 text-purple-400',
+      'rare': 'border-blue-400 bg-blue-400/10 text-blue-400',
+      'common': 'border-gray-400 bg-gray-400/10 text-gray-400'
+    };
+
+    if (items.length === 0) {
+      container.innerHTML = `
+        <div class="col-span-full text-center py-8 text-gray-400">
+          <p>No items found in this crate</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = items.map(item => `
+      <div class="border rounded-lg p-3 ${rarityColors[item.rarity] || rarityColors.common}">
+        <div class="font-semibold mb-1">${item.name}</div>
+        <div class="text-xs opacity-75 mb-1">${item.chance} chance</div>
+        ${item.description ? `<div class="text-xs opacity-60">${item.description}</div>` : ''}
+      </div>
+    `).join('');
+  }
+
+  function handleCratePurchase(e) {
+    const btn = e.target;
+    const itemId = parseInt(btn.dataset.itemId);
+    const itemName = btn.dataset.itemName;
+    const itemPrice = parseInt(btn.dataset.itemPrice);
+
+    if (userBalance < itemPrice) {
+      alert('Insufficient credits for this purchase');
+      return;
+    }
+
+    // For crates, purchase and open immediately
+    const originalText = btn.textContent;
+    btn.textContent = 'Opening...';
+    btn.disabled = true;
+
+    purchaseAndOpenCrate(itemId, itemName, itemPrice).finally(() => {
+      btn.textContent = originalText;
+      btn.disabled = false;
+    });
+  }
+
+  async function purchaseAndOpenCrate(itemId, itemName, itemPrice) {
+    try {
+      // First purchase the crate
+      const purchaseRes = await fetch('/api/store/purchase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itemId })
+      });
+
+      const purchaseData = await purchaseRes.json();
+
+      if (!purchaseData.ok) {
+        alert(`Purchase failed: ${purchaseData.error}`);
+        return;
+      }
+
+      if (!purchaseData.is_crate) {
+        alert('This item is not a crate!');
+        return;
+      }
+
+      // Update balance
+      userBalance -= itemPrice;
+      document.getElementById('user-balance').textContent = `${userBalance.toLocaleString()} Credits`;
+
+      // Show opening modal
+      document.getElementById('crate-name').textContent = itemName;
+      document.getElementById('opening-animation').classList.remove('hidden');
+      document.getElementById('crate-results').classList.add('hidden');
+      document.getElementById('crate-opening-modal').classList.remove('hidden');
+
+      // Open the crate
+      setTimeout(async () => {
+        try {
+          const openRes = await fetch('/api/crate/open', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ purchaseId: purchaseData.orderId })
+          });
+
+          const openData = await openRes.json();
+
+          if (openData.ok) {
+            document.getElementById('opening-animation').classList.add('hidden');
+            displayCrateResults(openData);
+            document.getElementById('crate-results').classList.remove('hidden');
+          } else {
+            alert(`Failed to open crate: ${openData.error}`);
+            document.getElementById('crate-opening-modal').classList.add('hidden');
+          }
+        } catch (err) {
+          alert('Failed to open crate: Network error');
+          document.getElementById('crate-opening-modal').classList.add('hidden');
+        }
+      }, 2000); // 2 second animation
+
+    } catch (err) {
+      alert('Purchase failed: Network error');
+    }
+  }
+
+  async function handlePurchase() {
+    if (!window.pendingPurchase) return;
+    
+    const { itemId, itemName, quantity, totalPrice } = window.pendingPurchase;
+    const confirmBtn = document.getElementById('confirm-purchase');
+    const originalText = confirmBtn.textContent;
+    
+    confirmBtn.textContent = 'Purchasing...';
+    confirmBtn.disabled = true;
+
+    try {
+      const res = await fetch('/api/store/purchase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itemId, quantity })
+      });
+
+      const data = await res.json();
+
+      if (data.ok) {
+        // Update balance locally
+        userBalance -= totalPrice;
+        document.getElementById('user-balance').textContent = `${userBalance.toLocaleString()} Credits`;
+        
+        // Refresh display to update purchase buttons
+        displayStoreItems(getFilteredItems());
+        
+        // Hide modal and show success
+        document.getElementById('purchase-modal').classList.add('hidden');
+        
+        // Show success modal
+        document.getElementById('success-message').textContent = `${itemName} has been delivered to your game inventory!`;
+        document.getElementById('success-modal').classList.remove('hidden');
+      } else {
+        alert(`Purchase failed: ${data.error}`);
+      }
+    } catch (err) {
+      alert('Purchase failed: Network error');
+    } finally {
+      confirmBtn.textContent = originalText;
+      confirmBtn.disabled = false;
+      window.pendingPurchase = null;
+    }
+  }
+
+  // Filter functionality
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const filter = e.target.dataset.filter;
+      
+      // Update active filter button
+      document.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.remove('bg-purple-500', 'text-white');
+        b.classList.add('bg-neutral-700', 'text-gray-300', 'hover:bg-neutral-600');
+      });
+      
+      e.target.classList.remove('bg-neutral-700', 'text-gray-300', 'hover:bg-neutral-600');
+      e.target.classList.add('bg-purple-500', 'text-white');
+      
+      currentFilter = filter;
+      displayStoreItems(getFilteredItems());
+    });
+  });
+
+  // Load items when store panel is first shown
+  document.querySelector('[data-panel="store"]').addEventListener('click', () => {
+    if (storeItems.length === 0) {
+      loadStoreItems();
+    }
+  });
+
+  // Retry button
+  document.getElementById('retry-store')?.addEventListener('click', loadStoreItems);
+
+  function displayCrateResults(data) {
+    const container = document.getElementById('crate-items');
+    const rarityColors = {
+      'common': 'text-gray-400 border-gray-600/30 bg-gray-600/20',
+      'rare': 'text-blue-400 border-blue-600/30 bg-blue-600/20',
+      'epic': 'text-purple-400 border-purple-600/30 bg-purple-600/20',
+      'legendary': 'text-yellow-400 border-yellow-600/30 bg-yellow-600/20'
+    };
+
+    container.innerHTML = data.results.map(item => {
+      const isLegendary = item.rarity === 'legendary';
+      const glowClass = isLegendary ? 'legendary-glow' : '';
+      
+      return `
+        <div class="bg-neutral-800/50 rounded-lg border border-neutral-700 p-4 ${glowClass} ${isLegendary ? 'relative overflow-hidden' : ''}">
+          ${isLegendary ? `
+            <div class="absolute inset-0 bg-gradient-to-r from-yellow-400/10 via-orange-400/10 to-yellow-400/10 animate-pulse"></div>
+            <div class="absolute inset-0 border-2 border-yellow-400/50 rounded-lg"></div>
+            <div class="relative z-10">
+          ` : ''}
+          
+          <div class="flex items-start justify-between mb-2">
+            <h4 class="font-semibold ${isLegendary ? 'text-yellow-300' : ''}">${item.item_name}</h4>
+            <div class="flex gap-2">
+              ${isLegendary ? '<span class="text-xs px-2 py-1 bg-yellow-500/20 text-yellow-300 rounded-full border border-yellow-500/50 font-bold animate-pulse">✨ LEGENDARY</span>' : ''}
+              ${item.was_pity ? '<span class="text-xs px-2 py-1 bg-red-500/20 text-red-400 rounded-full border border-red-500/30">PITY</span>' : ''}
+            </div>
+          </div>
+          <p class="text-gray-400 text-sm mb-3">${item.item_description || 'No description'}</p>
+          <div class="flex items-center justify-between">
+            <span class="inline-block px-2 py-1 rounded-full text-xs font-medium border ${rarityColors[item.rarity] || rarityColors.common}">
+              ${item.rarity.toUpperCase()}
+            </span>
+            <span class="text-gray-300 font-semibold">×${item.quantity}</span>
+          </div>
+          ${!item.delivered ? '<p class="text-red-400 text-xs mt-2">⚠ Delivery failed</p>' : ''}
+          
+          ${isLegendary ? '</div>' : ''}
+        </div>
+      `;
+    }).join('');
+
+    // Update pity display
+    document.getElementById('rare-pity').textContent = data.pity_info.rare_pity_in === 0 ? 'GUARANTEED!' : `${data.pity_info.rare_pity_in} opens`;
+    document.getElementById('legendary-pity').textContent = data.pity_info.legendary_pity_in === 0 ? 'GUARANTEED!' : `${data.pity_info.legendary_pity_in} opens`;
+  }
+
+  // Crate modal functionality
+  const crateModal = document.getElementById('crate-opening-modal');
+  const closeCrateResults = document.getElementById('close-crate-results');
+
+  closeCrateResults.addEventListener('click', () => {
+    crateModal.classList.add('hidden');
+  });
+
+  // Crate Contents Modal functionality
+  const crateContentsModal = document.getElementById('crate-contents-modal');
+  const closeCrateContents = document.getElementById('close-crate-contents');
+
+  closeCrateContents.addEventListener('click', () => {
+    crateContentsModal.classList.add('hidden');
+    crateContentsModal.style.display = 'none';
+  });
+
+  // Credit Purchase functionality
+  let pendingCreditPurchase = null;
+
+  // Credit purchase modal handlers
+  const creditPurchaseModal = document.getElementById('credit-purchase-modal');
+  const cancelCreditPurchase = document.getElementById('cancel-credit-purchase');
+  const confirmCreditPurchase = document.getElementById('confirm-credit-purchase');
+  const creditSuccessModal = document.getElementById('credit-success-modal');
+  const closeCreditSuccess = document.getElementById('close-credit-success');
+
+  // Credit purchase button handlers
+  document.querySelectorAll('.purchase-credit-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const packageId = parseInt(btn.dataset.packageId);
+      const packageName = btn.dataset.packageName;
+      const credits = parseInt(btn.dataset.credits);
+      const bonus = parseInt(btn.dataset.bonus);
+      const totalCredits = parseInt(btn.dataset.totalCredits);
+      const price = parseFloat(btn.dataset.price);
+
+      // Store purchase data
+      pendingCreditPurchase = { packageId, packageName, credits, bonus, totalCredits, price };
+
+      // Update modal content
+      document.getElementById('credit-package-name').textContent = packageName;
+      document.getElementById('credit-base-amount').textContent = `${credits.toLocaleString()} Credits`;
+      document.getElementById('credit-total-amount').textContent = `${totalCredits.toLocaleString()} Credits`;
+      document.getElementById('credit-price').textContent = `$${price.toFixed(2)}`;
+
+      // Handle bonus display
+      const bonusRow = document.getElementById('credit-bonus-row');
+      const bonusAmount = document.getElementById('credit-bonus-amount');
+      if (bonus > 0) {
+        bonusRow.style.display = 'flex';
+        bonusAmount.textContent = `+${bonus.toLocaleString()} Credits`;
+      } else {
+        bonusRow.style.display = 'none';
+      }
+
+      // Show modal
+      creditPurchaseModal.classList.remove('hidden');
+    });
+  });
+
+  cancelCreditPurchase.addEventListener('click', () => {
+    creditPurchaseModal.classList.add('hidden');
+    pendingCreditPurchase = null;
+  });
+
+  confirmCreditPurchase.addEventListener('click', async () => {
+    if (!pendingCreditPurchase) return;
+
+    const originalText = confirmCreditPurchase.textContent;
+    confirmCreditPurchase.textContent = 'Processing...';
+    confirmCreditPurchase.disabled = true;
+
+    try {
+      const res = await fetch('/api/credits/purchase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ packageId: pendingCreditPurchase.packageId })
+      });
+
+      const data = await res.json();
+
+      if (data.ok) {
+        // Update balance locally
+        userBalance += pendingCreditPurchase.totalCredits;
+        document.getElementById('user-balance').textContent = `${userBalance.toLocaleString()} Credits`;
+        document.getElementById('current-balance').textContent = `${userBalance.toLocaleString()} Credits`;
+
+        // Hide purchase modal and show success
+        creditPurchaseModal.classList.add('hidden');
+
+        // Show success modal
+        document.getElementById('credit-success-message').textContent = 
+          `${pendingCreditPurchase.totalCredits.toLocaleString()} credits have been added to your account!`;
+        creditSuccessModal.classList.remove('hidden');
+
+        // Refresh purchase history
+        loadPurchaseHistory();
+      } else {
+        alert(`Purchase failed: ${data.error}`);
+      }
+    } catch (err) {
+      alert('Purchase failed: Network error');
+    } finally {
+      confirmCreditPurchase.textContent = originalText;
+      confirmCreditPurchase.disabled = false;
+      pendingCreditPurchase = null;
+    }
+  });
+
+  closeCreditSuccess.addEventListener('click', () => {
+    creditSuccessModal.classList.add('hidden');
+  });
+
+  // Purchase history functionality
+  async function loadPurchaseHistory() {
+    const loading = document.getElementById('history-loading');
+    const historyDiv = document.getElementById('purchase-history');
+    const emptyState = document.getElementById('history-empty');
+    const errorDiv = document.getElementById('history-error');
+
+    loading.classList.remove('hidden');
+    historyDiv.classList.add('hidden');
+    emptyState.classList.add('hidden');
+    errorDiv.classList.add('hidden');
+
+    try {
+      const res = await fetch('/api/credits/history');
+      const data = await res.json();
+
+      if (data.ok) {
+        const history = data.history;
+        
+        if (history.length === 0) {
+          loading.classList.add('hidden');
+          emptyState.classList.remove('hidden');
+        } else {
+          displayPurchaseHistory(history);
+          loading.classList.add('hidden');
+          historyDiv.classList.remove('hidden');
+        }
+      } else {
+        throw new Error(data.error || 'Failed to load history');
+      }
+    } catch (err) {
+      console.error('Failed to load purchase history:', err);
+      loading.classList.add('hidden');
+      errorDiv.classList.remove('hidden');
+    }
+  }
+
+  function displayPurchaseHistory(history) {
+    const tableBody = document.getElementById('history-table-body');
+    
+    tableBody.innerHTML = history.map(record => {
+      const date = new Date(record.purchasedAt).toLocaleDateString();
+      const statusColor = record.status === 'completed' ? 'text-green-400' : 
+                         record.status === 'pending' ? 'text-yellow-400' : 'text-red-400';
+      
+      return `
+        <tr class="hover:bg-neutral-800/30">
+          <td class="px-6 py-4">
+            <div>
+              <div class="font-medium text-gray-200">${record.packageName}</div>
+              ${record.transactionId ? `<div class="text-xs text-gray-500">${record.transactionId}</div>` : ''}
+            </div>
+          </td>
+          <td class="px-6 py-4">
+            <div>
+              <div class="text-purple-400 font-semibold">${record.totalCredits.toLocaleString()}</div>
+              ${record.bonusCredits > 0 ? `<div class="text-xs text-green-400">+${record.bonusCredits.toLocaleString()} bonus</div>` : ''}
+            </div>
+          </td>
+          <td class="px-6 py-4">
+            <span class="text-green-400 font-semibold">$${record.amountPaid.toFixed(2)}</span>
+          </td>
+          <td class="px-6 py-4 text-gray-300">
+            ${date}
+          </td>
+          <td class="px-6 py-4">
+            <span class="inline-block px-2 py-1 text-xs rounded-full capitalize ${statusColor} ${statusColor.replace('text-', 'bg-').replace('400', '400/20')} border ${statusColor.replace('text-', 'border-').replace('400', '400/30')}">
+              ${record.status}
+            </span>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // Load purchase history when purchase panel is shown
+  document.querySelector('[data-panel="purchase"]').addEventListener('click', () => {
+    // Small delay to ensure panel is visible
+    setTimeout(() => {
+      if (document.getElementById('history-loading') && !document.getElementById('history-loading').classList.contains('hidden')) {
+        loadPurchaseHistory();
+      }
+    }, 100);
+  });
+
+  // Refresh history button
+  document.getElementById('refresh-history')?.addEventListener('click', loadPurchaseHistory);
+  document.getElementById('retry-history')?.addEventListener('click', loadPurchaseHistory);
+</script>

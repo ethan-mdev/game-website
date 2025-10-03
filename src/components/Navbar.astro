@@ -1,0 +1,43 @@
+---
+export const prerender = false;
+
+import { validateSession } from "../lib/session";
+
+interface Props {
+  currentPage?: string;
+}
+
+const { currentPage } = Astro.props;
+
+// Check if user is logged in
+const user = await validateSession(Astro.request);
+
+// Build redirect URL for login/register based on current page
+const currentPath = Astro.url.pathname;
+const loginUrl = currentPage === 'forum' ? `/login?redirect=${encodeURIComponent(currentPath)}` : '/login';
+const registerUrl = currentPage === 'forum' ? `/register?redirect=${encodeURIComponent(currentPath)}` : '/register';
+---
+
+<nav class="bg-slate-900 px-6 py-4 flex justify-end">
+  <div class="space-x-6">
+    {currentPage === 'download' || currentPage === 'forum' ? (
+      <a href="/" class="text-purple-400 hover:text-purple-300 font-semibold">Home</a>
+    ) : (
+      <a href="/download" class="text-purple-400 hover:text-purple-300 font-semibold">Download</a>
+    )}
+    <a 
+      href="/forum" 
+      class={currentPage === 'forum' ? 'text-purple-400 font-semibold' : 'text-gray-100 hover:text-purple-300'}
+    >
+      Forum
+    </a>
+    {user ? (
+      <a href="/dashboard" class="text-gray-100 hover:text-purple-300">Dashboard</a>
+    ) : (
+      <>
+        <a href={loginUrl} class="text-gray-100 hover:text-purple-300">Login</a>
+        <a href={registerUrl} class="text-gray-100 hover:text-purple-300">Register</a>
+      </>
+    )}
+  </div>
+</nav>

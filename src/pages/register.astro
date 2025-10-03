@@ -1,0 +1,175 @@
+---
+export const prerender = false;
+
+// register.astro
+import { validateSession } from "../lib/session";
+import AuthCard from "../layouts/AuthLayout.astro";
+import "../styles/global.css";
+
+// Get redirect parameter
+const redirectTo = Astro.url.searchParams.get('redirect') || '/dashboard';
+
+// Redirect to dashboard (or specified page) if already logged in
+const user = await validateSession(Astro.request);
+if (user) {
+  return Astro.redirect(redirectTo);
+}
+---
+
+<AuthCard
+  title="Create account"
+  logoSrc="/platinumcrown.png"
+>
+  <form id="register-form" class="space-y-5">
+    <div>
+      <label for="username" class="block text-sm font-medium text-gray-300">Username</label>
+      <input
+        id="username" name="username" type="text" autocomplete="username"
+        class="mt-2 w-full rounded-md bg-neutral-900 ring-1 ring-neutral-700 px-3 py-2
+               text-gray-100 placeholder:text-gray-500 focus:outline-none focus:ring-purple-500"
+        placeholder="Arcanist42" required
+      />
+    </div>
+
+    <div>
+      <label for="email" class="block text-sm font-medium text-gray-300">Email</label>
+      <input
+        id="email" name="email" type="email" autocomplete="email"
+        class="mt-2 w-full rounded-md bg-neutral-900 ring-1 ring-neutral-700 px-3 py-2
+               text-gray-100 placeholder:text-gray-500 focus:outline-none focus:ring-purple-500"
+        placeholder="you@realm.com" required
+      />
+    </div>
+
+    <div>
+      <div class="flex items-center gap-2 mb-2">
+        <label for="password" class="block text-sm font-medium text-gray-300">Password</label>
+        <!-- tooltip remains as-is -->
+      </div>
+      <input
+        id="password" name="password" type="password" autocomplete="new-password"
+        class="mt-2 w-full rounded-md bg-neutral-900 ring-1 ring-neutral-700 px-3 py-2
+               text-gray-100 placeholder:text-gray-500 focus:outline-none focus:ring-purple-500"
+        placeholder="Create a unique password" required
+      />
+    </div>
+
+    <div>
+      <label for="confirm" class="block text-sm font-medium text-gray-300">Confirm Password</label>
+      <input
+        id="confirm" name="confirm" type="password" autocomplete="new-password"
+        class="mt-2 w-full rounded-md bg-neutral-900 ring-1 ring-neutral-700 px-3 py-2
+               text-gray-100 placeholder:text-gray-500 focus:outline-none focus:ring-purple-500"
+        placeholder="Password" required
+      />
+    </div>
+
+    <div id="register-error" class="text-sm text-red-400 min-h-5"></div>
+
+    <button
+      type="submit"
+      id="register-btn"
+      class="w-full rounded-md bg-gradient-to-r from-purple-500 to-violet-400
+             hover:from-purple-400 hover:to-violet-300
+             px-4 py-2.5 font-semibold text-white shadow-md transition-colors"
+    >
+      Create account
+    </button>
+
+    <p class="mt-4 text-center text-sm text-gray-400">
+      Already have an account?
+      <a href="/login" class="text-cyan-400 hover:text-cyan-300">Sign in</a>
+    </p>
+  </form>
+</AuthCard>
+
+<!-- Security Toast Notification -->
+<div id="security-toast" class="fixed bottom-4 right-4 max-w-sm bg-purple-600 border border-purple-500 rounded-lg p-4 shadow-lg transform translate-y-full opacity-0 transition-all duration-300 z-50">
+  <div class="flex items-start gap-3">
+    <div class="flex-shrink-0">
+      <svg class="w-5 h-5 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+      </svg>
+    </div>
+    <div class="flex-1">
+      <p class="text-sm font-semibold text-purple-300">Security Reminder</p>
+      <p class="text-xs text-purple-200 mt-1">
+        Never use the same password. Create a unique password for your account security.
+      </p>
+    </div>
+    <button id="close-toast" class="flex-shrink-0 text-purple-400 hover:text-purple-300">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<script is:inline>
+  const form = document.getElementById('register-form');
+  const btn  = document.getElementById('register-btn');
+  const err  = document.getElementById('register-error');
+
+  // Security toast functionality
+  const securityToast = document.getElementById('security-toast');
+  const closeToast = document.getElementById('close-toast');
+
+  // Show toast after a short delay
+  setTimeout(() => {
+    securityToast.classList.remove('translate-y-full', 'opacity-0');
+    securityToast.classList.add('translate-y-0', 'opacity-100');
+  }, 2000);
+
+  // Auto-hide toast after 10 seconds
+  setTimeout(() => {
+    hideToast();
+  }, 12000);
+
+  // Close toast when X is clicked
+  closeToast.addEventListener('click', hideToast);
+
+  function hideToast() {
+    securityToast.classList.add('translate-y-full', 'opacity-0');
+    securityToast.classList.remove('translate-y-0', 'opacity-100');
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    err.textContent = '';
+
+    const email    = form.email.value.trim();
+    const username = form.username.value.trim();
+    const password = form.password.value;
+    const confirm  = form.confirm.value;
+
+    if (password !== confirm) {
+      err.textContent = 'Passwords do not match.';
+      return;
+    }
+
+    btn.disabled = true;
+
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ email, username, password })
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || !data.ok) {
+        err.textContent = data?.error || 'Registration failed';
+        btn.disabled = false;
+        return;
+      }
+
+      // success -> redirect to the page they came from or dashboard
+      const urlParams = new URLSearchParams(window.location.search);
+      const redirect = urlParams.get('redirect') || '/dashboard';
+      window.location.href = redirect;
+    } catch (e) {
+      err.textContent = 'Network error. Please try again.';
+      btn.disabled = false;
+    }
+  });
+</script>

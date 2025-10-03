@@ -1,0 +1,87 @@
+---
+interface Props {
+  account_balance: number;
+}
+
+const { account_balance } = Astro.props;
+---
+
+<!-- ========== STORE PANEL (hidden by default) ========== -->
+<section id="panel-store" class="space-y-6 hidden">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-xl font-bold">Store</h2>
+    <div class="bg-slate-800/50 px-4 py-2 rounded-lg border border-slate-700">
+      <span class="text-sm text-gray-400">Balance: </span>
+      <span id="user-balance" class="text-purple-400 font-semibold">{(account_balance || 0).toLocaleString()} Credits</span>
+    </div>
+  </div>
+
+  <!-- Filter Buttons -->
+  <div class="flex flex-wrap gap-2 mb-6 p-4 bg-slate-800/30 rounded-xl border border-slate-700">
+    <button 
+      class="filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-purple-500 text-white"
+      data-filter="all"
+    >
+      All Items
+    </button>
+    <button 
+      class="filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-neutral-700 text-gray-300 hover:bg-neutral-600"
+      data-filter="buffs"
+    >
+      Buffs
+    </button>
+    <button 
+      class="filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-neutral-700 text-gray-300 hover:bg-neutral-600"
+      data-filter="consumables"
+    >
+      Consumables
+    </button>
+    <button 
+      class="filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-neutral-700 text-gray-300 hover:bg-neutral-600"
+      data-filter="mounts"
+    >
+      Mounts
+    </button>
+    <button 
+      class="filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-neutral-700 text-gray-300 hover:bg-neutral-600"
+      data-filter="costumes"
+    >
+      Costumes
+    </button>
+    <button 
+      class="filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-neutral-700 text-gray-300 hover:bg-neutral-600"
+      data-filter="crates"
+    >
+      Crates
+    </button>
+    <button 
+      class="filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-neutral-700 text-gray-300 hover:bg-neutral-600"
+      data-filter="bundles"
+    >
+      Bundles
+    </button>
+    <button 
+      class="filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-neutral-700 text-gray-300 hover:bg-neutral-600"
+      data-filter="misc"
+    >
+      Misc
+    </button>
+  </div>
+
+  <!-- Loading state -->
+  <div id="store-loading" class="text-center py-8">
+    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+    <p class="text-gray-400 mt-2">Loading items...</p>
+  </div>
+
+  <!-- Items grid -->
+  <div id="store-items" class="hidden">
+    <!-- Items will be loaded here via JavaScript -->
+  </div>
+
+  <!-- Error state -->
+  <div id="store-error" class="text-center py-8 hidden">
+    <p class="text-red-400">Failed to load store items</p>
+    <button id="retry-store" class="mt-2 text-purple-400 hover:text-purple-300">Retry</button>
+  </div>
+</section>

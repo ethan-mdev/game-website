@@ -1,0 +1,58 @@
+<section
+    class="relative min-h-[50vh] flex items-center justify-center text-center"
+>
+    <!-- background image -->
+    <div
+        class="absolute inset-0 bg-[url('/hero-section1.png')] bg-cover bg-center"
+        aria-hidden="true"
+    >
+    </div>
+
+    <!-- dim overlay -->
+    <div
+        class="absolute inset-0 bg-slate-900/60 backdrop-blur-[2px]"
+        aria-hidden="true"
+    >
+    </div>
+
+    <!-- content -->
+    <div class="relative px-6 mb-6 animate-fade-in">
+        <img
+            src="/platinumcrown.png"
+            alt="Game Logo"
+            class="mx-auto w-64 h-auto md:w-72 lg:w-80 drop-shadow-2xl"
+        />
+        <p class="mt-4 text-gray-300 max-w-xl mx-auto text-lg drop-shadow">
+            Unique raids, encounters, and handcrafted adventures built with
+            creativity.
+        </p>
+
+        <div class="mt-8 flex items-center justify-center gap-3">
+            <a
+                href="/download"
+                class="inline-flex items-center gap-2 rounded-md bg-purple-500 hover:bg-purple-400 px-5 py-2.5 font-semibold text-white transition"
+            >
+                Download
+            </a>
+            <a
+                href="#feature-section"
+                class="inline-flex items-center gap-2 rounded-md border border-purple-500 px-5 py-2.5 font-semibold text-gray-100 hover:text-purple-400 transition"
+            >
+                Learn more
+            </a>
+        </div>
+    </div>
+</section>
+
+<style>
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(24px);}
+  to { opacity: 1; transform: none;}
+}
+.animate-fade-in {
+  animation: fade-in 1s cubic-bezier(.4,0,.2,1) both;
+}
+.glow-purple {
+  text-shadow: 0 0 16px #fbbf24cc, 0 2px 8px #000a;
+}
+</style>

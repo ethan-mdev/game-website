@@ -1,0 +1,77 @@
+---
+const {
+  version = "v1.0.0",
+  size = "1.2 GB",
+  direct = "/downloads/Game-Setup-x64.exe",
+  gdrive = "https://drive.google.com/…",
+  mega = "https://mega.nz/…",
+} = Astro.props;
+---
+
+<section class="bg-neutral-900 text-gray-100 py-16">
+  <div class="mx-auto max-w-3xl px-6">
+    <header class="text-center">
+      <h1 class="text-3xl md:text-4xl font-extrabold">
+        Download <span class="text-purple-400">Game Demo</span>
+      </h1>
+      <p class="mt-2 text-gray-400">
+        Version <span class="text-gray-300 font-medium">{version}</span>
+        {size}
+      </p>
+    </header>
+
+    <div class="mt-10 grid gap-6 md:grid-cols-3">
+      <a
+        href={direct}
+        class="flex flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-neutral-800 via-neutral-900 to-neutral-800 p-8 text-center
+         ring-2 ring-neutral-800 hover:ring-purple-400/80 shadow-xl hover:scale-105 transition-all duration-200 group"
+      >
+        <div
+          class="text-5xl mb-4 drop-shadow-lg group-hover:scale-110 transition-transform"
+        >
+          🖥️
+        </div>
+        <h3
+          class="text-lg font-extrabold text-purple-400 group-hover:text-white transition-colors"
+        >
+          Direct Download
+        </h3>
+        <p class="text-sm text-gray-400 mt-2">{size}</p>
+      </a>
+      <a
+        href={gdrive}
+        class="flex flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-neutral-800 via-neutral-900 to-neutral-800 p-8 text-center
+         ring-2 ring-neutral-800 hover:ring-purple-400/80 shadow-xl hover:scale-105 transition-all duration-200 group"
+      >
+        <div
+          class="text-5xl mb-4 drop-shadow-lg group-hover:scale-110 transition-transform"
+        >
+          ☁️
+        </div>
+        <h3
+          class="text-lg font-extrabold text-purple-400 group-hover:text-white transition-colors"
+        >
+          Google Drive
+        </h3>
+        <p class="text-sm text-gray-400 mt-2">Mirror Link</p>
+      </a>
+      <a
+        href={mega}
+        class="flex flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-neutral-800 via-neutral-900 to-neutral-800 p-8 text-center
+         ring-2 ring-neutral-800 hover:ring-purple-400/80 shadow-xl hover:scale-105 transition-all duration-200 group"
+      >
+        <div
+          class="text-5xl mb-4 drop-shadow-lg group-hover:scale-110 transition-transform"
+        >
+          📦
+        </div>
+        <h3
+          class="text-lg font-extrabold text-purple-400 group-hover:text-white transition-colors"
+        >
+          MEGA.nz
+        </h3>
+        <p class="text-sm text-gray-400 mt-2">Mirror Link</p>
+      </a>
+    </div>
+  </div>
+</section>

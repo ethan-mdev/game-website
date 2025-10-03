@@ -1,0 +1,56 @@
+---
+interface Props {
+  characters: any[];
+}
+
+const { characters } = Astro.props;
+---
+
+<!-- ========== ACCOUNT PANEL (Unstuck, history) ========== -->
+<section id="panel-account" class="space-y-6">
+  <h2 class="text-xl font-bold">Account</h2>
+
+  <!-- Character cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {
+      characters.map((char) => (
+        <div class="rounded-xl bg-neutral-900/80 ring-1 ring-neutral-800 p-5 shadow-[0_0_25px_rgba(251,191,36,0.12)]">
+          <h3 class="font-semibold text-gray-200">{char.name}</h3>
+          <p class="mt-1 text-sm text-gray-400">
+            Level {char.level} {char.class}
+          </p>
+          <button
+            class="mt-4 w-full rounded-md bg-purple-500 hover:bg-purple-400 px-4 py-2 font-semibold text-white unstuck-btn transition-colors"
+            data-character={char.name}
+          >
+            Unstuck
+          </button>
+        </div>
+      ))
+    }
+
+    {
+      characters.length === 0 && (
+        <div class="col-span-full text-center py-12 text-gray-400">
+          <svg
+            class="w-16 h-16 mx-auto mb-4 text-gray-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1"
+              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+            />
+          </svg>
+          <h3 class="text-lg font-semibold text-gray-300 mb-2">
+            No Characters Found
+          </h3>
+          <p>Create a character in-game to get started!</p>
+        </div>
+      )
+    }
+  </div>
+</section>

@@ -1,0 +1,278 @@
+---
+// Forum Categories Page
+import "../../styles/global.css";
+import Navbar from "../../components/Navbar.astro";
+import Footer from "../../components/Footer.astro";
+import { validateSession } from "../../lib/session";
+
+export const prerender = false;
+
+const user = await validateSession(Astro.request);
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width" />
+  <link rel="icon" href="/icon-512-square.png" />
+  <title>Forum - Game</title>
+</head>
+<body class="bg-slate-900 text-gray-100 font-sans min-h-screen">
+  <Navbar currentPage="forum" />
+  
+  <div class="container mx-auto px-4 py-8 max-w-6xl">
+    <header class="mb-8">
+      <h1 class="text-4xl font-bold text-purple-400 mb-4">Game Forums</h1>
+      <p class="text-gray-400 text-lg">Welcome to our community discussion boards</p>
+    </header>
+
+    <!-- Forum Header with Stats -->
+    <div class="rounded-xl bg-slate-900/80 ring-1 ring-slate-800 mb-6 p-6">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div class="flex gap-6">
+          <div>
+            <div class="text-2xl font-bold text-purple-400" id="totalThreads">-</div>
+            <div class="text-sm text-gray-400">Threads</div>
+          </div>
+          <div>
+            <div class="text-2xl font-bold text-purple-400" id="totalPosts">-</div>
+            <div class="text-sm text-gray-400">Posts</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <input 
+            type="text" 
+            placeholder="Search forums..." 
+            class="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+            id="searchInput"
+          />
+          <button 
+            id="searchBtn"
+            class="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-slate-900 font-semibold rounded-lg transition text-sm"
+          >
+            Search
+          </button>
+          
+          <!-- User Info -->
+          <div class="flex items-center gap-3 ml-3 pl-3 border-l border-slate-700">
+            {user ? (
+              <>
+                <img 
+                  src={user.profile_image ? `/avatars/${user.profile_image}` : '/avatars/avatar-1.png'} 
+                  alt={user.username}
+                  class="w-10 h-10 rounded-full object-cover ring-2 ring-purple-500/50"
+                />
+                <div class="flex flex-col items-start">
+                  <span class="text-sm font-semibold text-gray-100">{user.username}</span>
+                  <div class="flex gap-1">
+                    {user.roles?.some(r => r.toUpperCase() === 'ADMIN') ? (
+                      <span class="px-1.5 py-0.5 bg-red-500/20 text-red-400 text-xs font-semibold rounded">ADMIN</span>
+                    ) : user.roles?.some(r => r.toUpperCase() === 'MOD') ? (
+                      <span class="px-1.5 py-0.5 bg-purple-500/20 text-purple-400 text-xs font-semibold rounded">MOD</span>
+                    ) : (
+                      <span class="px-1.5 py-0.5 bg-slate-500/20 text-slate-300 text-xs font-semibold rounded">MEMBER</span>
+                    )}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <img 
+                  src="/avatars/avatar-1.png" 
+                  alt="Guest"
+                  class="w-10 h-10 rounded-full object-cover ring-2 ring-slate-600"
+                />
+                <div class="flex flex-col items-start">
+                  <span class="text-sm font-semibold text-gray-400">Guest</span>
+                  <span class="px-1.5 py-0.5 bg-slate-500/20 text-slate-400 text-xs font-semibold rounded">VISITOR</span>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Categories Container -->
+    <div id="categoriesContainer" class="grid gap-6">
+      <div class="text-center py-8 text-gray-400">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400"></div>
+        <p class="mt-2">Loading categories...</p>
+      </div>
+    </div>
+  </div>
+
+  <Footer />
+
+  <script>
+    // Fetch and display categories
+    async function loadCategories() {
+      try {
+        const res = await fetch('/forum/categories');
+        const data = await res.json();
+        
+        if (!data.ok) {
+          throw new Error(data.error || 'Failed to load categories');
+        }
+
+        renderCategories(data.categories);
+        
+        // Load stats (you might want to add a stats endpoint)
+        updateStats();
+      } catch (err) {
+        console.error('Error loading categories:', err);
+        document.getElementById('categoriesContainer')!.innerHTML = `
+          <div class="text-center py-8 text-red-400">
+            <p>Failed to load forum categories. Please try again later.</p>
+          </div>
+        `;
+      }
+    }
+
+    // Map category names/slugs to their custom icons
+    function getCategoryIcon(cat: any) {
+      const iconMap: Record<string, string> = {
+        'announcements': '/platinumcrown.png',
+        'trading-economy': '/platinumcrown.png',
+        'technical-support': '/platinumcrown.png',
+        'community-events': '/platinumcrown.png',
+        'game-discussion': '/platinumcrown.png'
+      };
+
+      // Try to match by slug first, then by lowercase name
+      const icon = iconMap[cat.slug] || iconMap[cat.name?.toLowerCase()];
+      
+      if (icon) {
+        return `<img src="${icon}" alt="${cat.name}" class="w-8 h-8 object-contain drop-shadow-md" style="image-rendering: crisp-edges;" />`;
+      }
+      
+      // Fallback icons
+      if (cat.is_announcement) {
+        return '<svg class="w-6 h-6 text-purple-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/></svg>';
+      }
+      if (cat.is_locked) {
+        return '<svg class="w-6 h-6 text-red-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>';
+      }
+      return '<svg class="w-6 h-6 text-cyan-400" fill="currentColor" viewBox="0 0 20 20"><path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/><path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"/></svg>';
+    }
+
+    function renderCategories(categories: any[]) {
+      const container = document.getElementById('categoriesContainer')!;
+      
+      if (!categories || categories.length === 0) {
+        container.innerHTML = '<div class="text-center py-8 text-gray-400">No categories found.</div>';
+        return;
+      }
+
+      container.innerHTML = categories.map(cat => `
+        <div class="rounded-xl bg-slate-900/80 ring-1 ring-slate-800 overflow-hidden">
+          <!-- Category Header -->
+          <div class="bg-gradient-to-r from-purple-500/10 to-transparent p-4 border-b border-slate-800">
+            <div class="flex items-center gap-3">
+              ${getCategoryIcon(cat)}
+              <div class="flex-1">
+                <h2 class="text-xl font-bold text-purple-400">${cat.name}</h2>
+                ${cat.description ? `<p class="text-sm text-gray-400 mt-1">${cat.description}</p>` : ''}
+              </div>
+            </div>
+          </div>
+
+          <!-- Subcategories OR Direct Category Link -->
+          ${cat.children && cat.children.length > 0 ? `
+            <div class="p-4 space-y-3">
+              ${cat.children.map((sub: any) => `
+                <a href="/forum/category/${sub.id}" class="block p-4 bg-slate-800/50 hover:bg-slate-800 rounded-lg transition group">
+                  <div class="flex items-start justify-between gap-4">
+                    <div class="flex-1">
+                      <div class="flex items-center gap-2 mb-1">
+                        <h3 class="font-semibold text-gray-100 group-hover:text-purple-400 transition">${sub.name}</h3>
+                        ${sub.is_private ? '<span class="text-xs px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded flex items-center gap-1"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>Private</span>' : ''}
+                        ${sub.is_locked ? '<span class="text-xs px-2 py-0.5 bg-red-500/20 text-red-400 rounded">Locked</span>' : ''}
+                      </div>
+                      ${sub.description ? `<p class="text-sm text-gray-400">${sub.description}</p>` : ''}
+                    </div>
+                    <div class="text-right text-sm shrink-0">
+                      <div class="text-gray-400">Threads</div>
+                      <div class="font-semibold text-purple-400">${sub.thread_count || 0}</div>
+                    </div>
+                  </div>
+                </a>
+              `).join('')}
+            </div>
+          ` : `
+            <div class="p-4 space-y-3">
+              ${cat.latest_thread ? `
+                <!-- Latest Announcement Thread -->
+                <a href="/forum/thread/${cat.latest_thread.id}" class="block p-4 bg-neutral-800/50 hover:bg-neutral-800 rounded-lg transition group">
+                  <div class="flex items-start justify-between gap-4">
+                    <div class="flex-1">
+                      <h3 class="font-semibold text-gray-100 group-hover:text-purple-400 transition mb-1">${cat.latest_thread.title}</h3>
+                      <div class="flex items-center gap-2 text-xs text-gray-400">
+                        <span>By ${cat.latest_thread.author_name}</span>
+                        <span>•</span>
+                        <span>${new Date(cat.latest_thread.created_at).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                    <div class="text-right text-sm shrink-0">
+                      <svg class="w-5 h-5 text-purple-400 ml-auto" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                      </svg>
+                    </div>
+                  </div>
+                </a>
+              ` : `
+                <div class="p-4 text-center text-gray-400 text-sm">No announcements yet</div>
+              `}
+              
+              <!-- View All Link -->
+              <a href="/forum/category/${cat.id}" class="block p-3 text-center bg-neutral-800/30 hover:bg-neutral-800/50 rounded-lg transition">
+                <div class="flex items-center justify-center gap-2 text-sm text-purple-400 hover:text-purple-300">
+                  <span>View all ${cat.thread_count || 0} ${cat.thread_count === 1 ? 'thread' : 'threads'}</span>
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                  </svg>
+                </div>
+              </a>
+            </div>
+          `}
+        </div>
+      `).join('');
+    }
+
+    async function updateStats() {
+      try {
+        const res = await fetch('/forum/stats');
+        const data = await res.json();
+        
+        if (data.ok) {
+          document.getElementById('totalThreads')!.textContent = data.total_threads.toString();
+          document.getElementById('totalPosts')!.textContent = data.total_posts.toString();
+        }
+      } catch (err) {
+        console.error('Error loading stats:', err);
+      }
+    }
+
+    // Search functionality
+    document.getElementById('searchBtn')!.addEventListener('click', () => {
+      const query = (document.getElementById('searchInput') as HTMLInputElement).value;
+      if (query.trim()) {
+        window.location.href = `/forum/search-results?q=${encodeURIComponent(query)}`;
+      }
+    });
+
+    document.getElementById('searchInput')!.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        const query = (document.getElementById('searchInput') as HTMLInputElement).value;
+        if (query.trim()) {
+          window.location.href = `/forum/search-results?q=${encodeURIComponent(query)}`;
+        }
+      }
+    });
+
+    // Load on page load
+    loadCategories();
+  </script>
+</body>
+</html>

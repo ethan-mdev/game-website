@@ -1,0 +1,47 @@
+---
+import FeatureCard from "./FeatureCard.astro";
+---
+
+<section id="feature-section" class="bg-slate-900 text-gray-100 py-16">
+    <div class="px-6 mx-auto max-w-6xl text-center">
+        <h2 class="text-2xl md:text-3xl font-bold tracking-wide">
+            Custom <span class="text-purple-400">Features</span>!
+        </h2>
+        <p class="mt-2 text-gray-400 text-sm max-w-2xl mx-auto">
+            Explore the systems and content made to make your experience unique.
+        </p>
+
+        <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <FeatureCard
+                img="/platinumcrown.png"
+                title="New Raid Encounters"
+                desc="Bring your friends, or just die. Either way it's new content."
+            />
+            <FeatureCard
+                img="/platinumcrown.png"
+                title="Custom Skills"
+                desc="Just spam buttons, that's all anyone does anyway."
+            />
+            <FeatureCard
+                img="/platinumcrown.png"
+                title="Real Time Statistics"
+                desc="Now you can roast your friends for slow clears."
+            />
+            <FeatureCard
+                img="/platinumcrown.png"
+                title="Advanced Crafting"
+                desc="Turn trash into slightly better trash."
+            />
+            <FeatureCard
+                img="/platinumcrown.png"
+                title="Revamped Quests"
+                desc="Brand new quests that still feel like a waste of time!"
+            />
+            <FeatureCard
+                img="/platinumcrown.png"
+                title="Free Store"
+                desc="It's free for now—don’t ask questions."
+            />
+        </div>
+    </div>
+</section>

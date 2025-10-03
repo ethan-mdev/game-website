@@ -1,0 +1,109 @@
+---
+export const prerender = false;
+// login.astro
+import { validateSession } from "../lib/session";
+import AuthCard from "../layouts/AuthLayout.astro";
+import "../styles/global.css";
+
+// Get redirect parameter
+const redirectTo = Astro.url.searchParams.get('redirect') || '/dashboard';
+
+// Redirect to dashboard (or specified page) if already logged in
+const user = await validateSession(Astro.request);
+if (user) {
+  return Astro.redirect(redirectTo);
+}
+---
+<AuthCard
+  title="Sign in"
+  subtitle="Welcome back, adventurer."
+  logoSrc="/platinumcrown.png"
+>
+  <form id="login-form" class="space-y-5">
+    <div>
+      <label for="username" class="block text-sm font-medium text-gray-300">Username</label>
+      <input
+        id="username"
+        name="username"
+        type="text"
+        autocomplete="username"
+        class="mt-2 w-full rounded-md bg-neutral-900 ring-1 ring-neutral-700 px-3 py-2
+               text-gray-100 placeholder:text-gray-500 focus:outline-none focus:ring-purple-500"
+        placeholder="Username"
+        required
+      />
+    </div>
+
+    <div>
+      <label for="password" class="block text-sm font-medium text-gray-300">Password</label>
+      <input
+        id="password"
+        name="password"
+        type="password"
+        autocomplete="current-password"
+        class="mt-2 w-full rounded-md bg-neutral-900 ring-1 ring-neutral-700 px-3 py-2
+               text-gray-100 placeholder:text-gray-500 focus:outline-none focus:ring-purple-500"
+        placeholder="Password"
+        required
+      />
+      <div class="mt-2 text-right">
+        <a href="#" class="text-sm text-purple-400 hover:text-purple-300">Forgot password?</a>
+      </div>
+    </div>
+
+    <div id="login-error" class="text-sm text-red-400 min-h-5"></div>
+
+    <button
+      type="submit"
+      id="login-btn"
+      class="w-full rounded-md bg-gradient-to-r from-purple-500 to-violet-400
+             hover:from-purple-400 hover:to-violet-300
+             px-4 py-2.5 font-semibold text-white shadow-md transition-colors"
+    >
+      Sign in
+    </button>
+
+    <p class="mt-4 text-center text-sm text-gray-400">
+      Don't have an account?
+      <a href="/register" class="text-cyan-400 hover:text-cyan-300">Register</a>
+    </p>
+  </form>
+</AuthCard>
+
+<script is:inline>
+  const form = document.getElementById('login-form');
+  const btn  = document.getElementById('login-btn');
+  const err  = document.getElementById('login-error');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    err.textContent = '';
+    btn.disabled = true;
+
+    const username = form.username.value.trim();
+    const password = form.password.value;
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || !data.ok) {
+        err.textContent = data?.error || 'Invalid credentials';
+        btn.disabled = false;
+        return;
+      }
+
+      // success -> redirect to the page they came from or dashboard
+      const urlParams = new URLSearchParams(window.location.search);
+      const redirect = urlParams.get('redirect') || '/dashboard';
+      window.location.href = redirect;
+    } catch (e) {
+      err.textContent = 'Network error. Please try again.';
+      btn.disabled = false;
+    }
+  });
+</script>

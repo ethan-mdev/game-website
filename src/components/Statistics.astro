@@ -1,0 +1,321 @@
+<section id="leaderboard-section" class="bg-slate-900 text-gray-100 py-8">
+  <div class="px-6 mx-auto max-w-6xl">
+    <div class="text-center mb-12">
+      <h2 class="text-2xl md:text-3xl font-bold tracking-wide">
+        Player <span class="text-purple-400">Leaderboards</span>
+      </h2>
+      <p class="mt-2 text-gray-400 text-sm max-w-2xl mx-auto">
+        Top players in Game!
+      </p>
+    </div>
+
+    <!-- Tab Navigation (dynamically generated) -->
+    <div
+      id="leaderboard-tabs"
+      class="flex flex-wrap justify-center gap-2 mb-8 p-4 bg-slate-800/30 rounded-xl border border-slate-700"
+    >
+      <!-- Tabs will be populated here -->
+    </div>
+
+    <!-- Loading State -->
+    <div id="leaderboard-loading" class="text-center py-12">
+      <div
+        class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"
+      >
+      </div>
+      <p class="text-gray-400 mt-4">Loading leaderboard...</p>
+    </div>
+
+    <!-- Leaderboard Content -->
+    <div id="leaderboard-content" class="hidden">
+      <div
+        class="bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden"
+      >
+        <!-- Header -->
+        <div class="bg-slate-800/80 px-6 py-4 border-b border-slate-700">
+          <div
+            class="grid grid-cols-3 gap-4 text-sm font-semibold text-gray-400 uppercase tracking-wide"
+          >
+            <div>Rank</div>
+            <div>Character Name</div>
+            <div id="stat-column-header">Playtime</div>
+          </div>
+        </div>
+
+        <!-- Leaderboard Rows -->
+        <div id="leaderboard-rows" class="divide-y divide-slate-700">
+          <!-- Rows will be populated here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div id="leaderboard-error" class="hidden text-center py-12">
+      <div class="text-red-400 mb-4">
+        <svg
+          class="w-12 h-12 mx-auto"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.728-.833-2.498 0L4.316 15.5c-.77.833.192 2.5 1.732 2.5z"
+          ></path>
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-300 mb-2">
+        Failed to Load Leaderboard
+      </h3>
+      <p class="text-gray-400 mb-4">
+        Something went wrong while fetching the data.
+      </p>
+      <button
+        id="retry-leaderboard"
+        class="px-6 py-2 bg-purple-500 hover:bg-purple-400 rounded-lg text-white font-semibold transition-colors"
+      >
+        Try Again
+      </button>
+    </div>
+  </div>
+</section>
+
+<style>
+  .crown-icon {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+  }
+
+  .rank-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+  }
+</style>
+
+<script>
+  let currentTab = "playtime";
+
+  // LEADERBOARD CONFIGURATION - ADD NEW TYPES HERE
+  const leaderboardConfig = {
+    playtime: {
+      name: "Most Active",
+      endpoint: "/api/leaderboard/playtime",
+      statColumn: "Playtime",
+      formatValue: (minutes: number) => {
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        return `${hours}h ${mins}m`;
+      },
+    },
+    level: {
+      name: "Highest Level",
+      endpoint: "/api/leaderboard/level",
+      statColumn: "Level",
+      formatValue: (level: any) => `Level ${level}`,
+    },
+    gold: {
+      name: "Richest",
+      endpoint: "/api/leaderboard/gold",
+      statColumn: "Money",
+      formatValue: (money: string) => {
+        const value = parseInt(money, 10);
+        const gems = Math.floor(value / 100000000);
+        const gold = Math.floor((value % 100000000) / 1000000);
+        const silver = Math.floor((value % 1000000) / 1000);
+        const copper = value % 1000;
+        let parts = [];
+        if (gems) parts.push(`${gems} gem${gems > 1 ? "s" : ""}`);
+        if (gold) parts.push(`${gold} gold`);
+        if (silver) parts.push(`${silver} silver`);
+        if (copper) parts.push(`${copper} copper`);
+        return parts.join(" ");
+      },
+    },
+    kills: {
+      name: "PvP Kings",
+      endpoint: "/api/leaderboard/kills",
+      statColumn: "Kills",
+      formatValue: (kills: any) => `${kills} kills`,
+    },
+    // ADD MORE LEADERBOARD TYPES HERE:
+    // newtype: {
+    //   name: 'Display Name',
+    //   endpoint: '/api/leaderboard/newtype',
+    //   statColumn: 'Column Header',
+    //   formatValue: (value) => `formatted ${value}`
+    // }
+  };
+
+  // Crown icons based on ranking
+  function getCrownIcon(rank: number) {
+    if (rank === 1) return "/platinumcrown.png";
+    if (rank >= 2 && rank <= 3) return "/goldcrown.png";
+    if (rank >= 4 && rank <= 7) return "/silvercrown.png";
+    if (rank >= 8 && rank <= 15) return "/bronzecrown.png";
+    return null;
+  }
+
+  // Get rank display
+  function getRankDisplay(rank: any) {
+    const crown = getCrownIcon(rank);
+    // Use a circle with border, similar to header avatar
+    if (crown) {
+      return `
+      <div class="w-10 h-10 flex items-center justify-center rounded-full border-2 border-purple-500 bg-slate-900 overflow-hidden">
+        <img src="${crown}" alt="Crown" class="w-7 h-7 object-contain" />
+      </div>
+    `;
+    } else {
+      return `
+      <div class="w-10 h-10 flex items-center justify-center rounded-full border-2 border-slate-700 bg-slate-900 text-gray-300 font-bold text-base">
+        ${rank}
+      </div>
+    `;
+    }
+  }
+
+  // Generate tabs
+  function generateTabs() {
+    const tabsContainer = document.getElementById("leaderboard-tabs");
+    const tabs = Object.keys(leaderboardConfig)
+      .map((key, index) => {
+        const config = leaderboardConfig[key as keyof typeof leaderboardConfig];
+        const isActive = key === currentTab;
+
+        return `
+        <button 
+          class="leaderboard-tab px-4 py-2 rounded-lg font-semibold transition-colors ${
+            isActive
+              ? "bg-purple-500 text-white"
+              : "text-gray-400 hover:text-white"
+          }" 
+          data-tab="${key}"
+        >
+          ${config.name}
+        </button>
+      `;
+      })
+      .join("");
+
+    if (tabsContainer) tabsContainer.innerHTML = tabs;
+  }
+
+  // Load leaderboard data
+  async function loadLeaderboard(tab: string) {
+    const config = leaderboardConfig[tab as keyof typeof leaderboardConfig];
+    if (!config) return;
+
+    const loadingEl = document.getElementById("leaderboard-loading");
+    const contentEl = document.getElementById("leaderboard-content");
+    const errorEl = document.getElementById("leaderboard-error");
+    const rowsEl = document.getElementById("leaderboard-rows");
+    const headerEl = document.getElementById("stat-column-header");
+
+    if (!loadingEl || !contentEl || !errorEl) return;
+
+    // Show loading state
+    loadingEl.classList.remove("hidden");
+    contentEl.classList.add("hidden");
+    errorEl.classList.add("hidden");
+
+    try {
+      const response = await fetch(config.endpoint);
+      const data = await response.json();
+
+      if (data.ok && data.players) {
+        // Update column header
+        if (headerEl) headerEl.textContent = config.statColumn;
+
+        // Generate rows
+        const rows = data.players
+          .map((player: { stat_value: any; character_name: any; }, index: number) => {
+            const rank = index + 1;
+            const rankDisplay = getRankDisplay(rank);
+            const formattedValue = config.formatValue(player.stat_value);
+
+            return `
+              <div class="px-6 py-2 hover:bg-slate-800/30 transition-colors">
+                <div class="grid grid-cols-3 gap-2 items-center">
+                  <div class="flex justify-start">
+                    ${rankDisplay}
+                  </div>
+                <div>
+                  <div class="font-semibold text-gray-200 text-base">${player.character_name}</div>
+                </div>
+                <div>
+                  <span class="text-purple-400 font-semibold">${formattedValue}</span>
+                </div>
+              </div>
+            </div>
+          `;
+          })
+          .join("");
+
+        if (rowsEl) rowsEl.innerHTML = rows;
+
+        // Show content
+        loadingEl.classList.add("hidden");
+        contentEl.classList.remove("hidden");
+      } else {
+        throw new Error(data.error || "Failed to load data");
+      }
+    } catch (error) {
+      console.error("Leaderboard error:", error);
+      if (loadingEl) loadingEl.classList.add("hidden");
+      if (errorEl) errorEl.classList.remove("hidden");
+    }
+  }
+
+  // Switch tab
+  function switchTab(tab: string) {
+    currentTab = tab;
+
+    // Update tab buttons
+    document.querySelectorAll(".leaderboard-tab").forEach((btn) => {
+      const isActive = (btn as HTMLElement).dataset.tab === tab;
+      if (isActive) {
+        btn.classList.add("bg-purple-500", "text-white");
+        btn.classList.remove("text-gray-400");
+      } else {
+        btn.classList.remove("bg-purple-500", "text-white");
+        btn.classList.add("text-gray-400");
+      }
+    });
+
+    // Load data
+    loadLeaderboard(tab);
+  }
+
+  // Event listeners
+  document.addEventListener("DOMContentLoaded", () => {
+    // Generate tabs
+    generateTabs();
+
+    // Tab click handlers
+    document.addEventListener("click", (e) => {
+      const target = e.target as HTMLElement;
+      if (target && target.classList.contains("leaderboard-tab")) {
+        switchTab(target.dataset.tab!);
+      }
+    });
+
+    // Retry button
+    document
+      .getElementById("retry-leaderboard")
+      ?.addEventListener("click", () => {
+        loadLeaderboard(currentTab);
+      });
+
+    // Load initial data
+    loadLeaderboard(currentTab);
+  });
+</script>

@@ -1,0 +1,68 @@
+---
+export const prerender = false;
+
+import { validateSession } from "../lib/session";
+import "../styles/global.css";
+import Sidebar from "../components/Sidebar.astro";
+import Header from "../components/Header.astro";
+import AccountPanel from "../components/AccountPanel.astro";
+import StorePanel from "../components/StorePanel.astro";
+import PurchasePanel from "../components/PurchasePanel.astro";
+import Modals from "../components/Modals.astro";
+import DashboardScripts from "../components/DashboardScripts.astro";
+
+// Protect the page - redirect if not logged in
+const user = await validateSession(Astro.request);
+if (!user) {
+  return Astro.redirect('/login');
+}
+
+const { username, profile_image, account_balance = 0, roles = [] } = user;
+const characters = user.characters || [];
+
+// Define available avatar images
+const avatarImages = [
+  'avatar-1.png',
+  'avatar-2.png', 
+  'avatar-3.png',
+];
+
+// Get current avatar or fallback
+const currentAvatar = profile_image && avatarImages.includes(profile_image) 
+  ? `/avatars/${profile_image}` 
+  : '/avatars/avatar-1.png';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - Game</title>
+    <meta
+      name="description"
+      content="Manage your account, purchase items, and track your progress."
+    />
+    <link rel="icon" type="image/png" href="/icon-512-square.png" />
+  </head>
+  <body>
+    <section class="min-h-screen bg-slate-900 text-gray-100">
+      <Sidebar />
+
+      <!-- ========== Main (pushed by fixed sidebar) ========== -->
+      <div class="md:ml-64 min-h-screen flex flex-col">
+        <Header username={username} currentAvatar={currentAvatar} roles={roles} />
+
+        <!-- Panels container -->
+        <main class="flex-1 p-6 space-y-8 overflow-y-auto">
+          <AccountPanel characters={characters} />
+          <StorePanel account_balance={account_balance} />
+          <PurchasePanel account_balance={account_balance} />
+        </main>
+      </div>
+
+      <Modals avatarImages={avatarImages} />
+      <DashboardScripts username={username} currentAvatar={currentAvatar} account_balance={account_balance} />
+    </section>
+  </body>
+</html>

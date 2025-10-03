@@ -1,0 +1,51 @@
+---
+/* Props:
+   title: string
+   subtitle?: string
+   logoSrc?: string | null   // optional: small logo above the title
+*/
+import "../styles/global.css";
+
+const { title, subtitle = "", logoSrc = null } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content={`${title} - Game Gaming Platform`} />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title} - Game</title>
+    <link rel="icon" type="image/png" href="/icon-512-square.png" />
+  </head>
+  <body
+    class="min-h-screen bg-neutral-900 text-gray-100 flex items-center justify-center px-6 py-12"
+  >
+    <main class="w-full max-w-md">
+      <div
+        class="rounded-2xl bg-neutral-800/80 backdrop-blur
+         ring-1 ring-neutral-700/60 px-8 py-10
+         shadow-[0_0_20px_rgba(251,191,36,0.07)]
+         transition-shadow duration-500
+         hover:shadow-[0_0_40px_rgba(251,191,36,0.1)]"
+      >
+        <header class="mb-8 text-center">
+          {
+            logoSrc && (
+              <img
+                src={logoSrc}
+                alt="Game"
+                class="mx-auto mb-4 w-24 h-auto drop-shadow-[0_0_10px_rgba(251,191,36,0.35)]"
+              />
+            )
+          }
+          <h1 class="text-3xl font-extrabold tracking-tight">
+            {title}
+          </h1>
+          {subtitle && <p class="mt-2 text-gray-400">{subtitle}</p>}
+        </header>
+        <slot />
+      </div>
+    </main>
+  </body>
+</html>

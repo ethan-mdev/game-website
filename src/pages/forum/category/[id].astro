@@ -1,0 +1,682 @@
+---
+// Forum Category/Thread List Page
+import "../../../styles/global.css";
+import Navbar from "../../../components/Navbar.astro";
+import Footer from "../../../components/Footer.astro";
+import { validateSession } from "../../../lib/session";
+
+export const prerender = false;
+
+const user = await validateSession(Astro.request);
+const categoryId = Astro.params.id;
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width" />
+  <link rel="icon" href="/icon-512-square.png" />
+  <title>Forum Category - Game</title>
+</head>
+<body class="bg-neutral-900 text-gray-100 font-sans min-h-screen">
+  <Navbar currentPage="forum" />
+  
+  <div class="container mx-auto px-4 py-8 max-w-6xl">
+    <!-- Breadcrumb Navigation -->
+    <div class="mb-6">
+      <div class="flex items-center gap-2 text-sm">
+        <a href="/forum" class="text-purple-400 hover:text-purple-300">Forums</a>
+        <span class="text-gray-600">/</span>
+        <span class="text-gray-400" id="breadcrumbCategory">Loading...</span>
+      </div>
+    </div>
+
+    <!-- Category Header -->
+    <div class="rounded-xl bg-neutral-900/80 ring-1 ring-neutral-800 mb-6 overflow-hidden">
+      <div class="bg-gradient-to-r from-purple-500/10 to-transparent p-6 border-b border-neutral-800">
+        <div class="flex items-start justify-between gap-4">
+          <div class="flex-1">
+            <h1 class="text-3xl font-bold text-purple-400 mb-2" id="categoryName">Loading...</h1>
+            <p class="text-gray-400" id="categoryDescription"></p>
+          </div>
+          {user && (
+            <button 
+              id="newThreadBtn"
+              class="px-6 py-3 bg-purple-500 hover:bg-purple-600 text-neutral-900 font-semibold rounded-lg transition flex items-center gap-2"
+            >
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
+              </svg>
+              New Thread
+            </button>
+          )}
+        </div>
+      </div>
+
+      <!-- Sort and Filter Options -->
+      <div class="p-4 bg-neutral-800/30 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <label class="text-sm text-gray-400">Sort:</label>
+          <select id="sortSelect" class="px-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+            <option value="recent">Most Recent</option>
+            <option value="popular">Most Popular</option>
+            <option value="replies">Most Replies</option>
+          </select>
+        </div>
+        <div class="text-sm text-gray-400">
+          <span id="threadCount">0</span> threads
+        </div>
+      </div>
+    </div>
+
+    <!-- Threads List -->
+    <div id="threadsContainer" class="space-y-3">
+      <div class="text-center py-8 text-gray-400">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400"></div>
+        <p class="mt-2">Loading threads...</p>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div id="paginationContainer" class="mt-6"></div>
+  </div>
+
+  <!-- New Thread Modal -->
+  {user && (
+    <div id="newThreadModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 p-4" style="display: none;">
+      <div class="bg-neutral-800 rounded-xl ring-1 ring-neutral-700 p-6 w-full max-w-3xl mx-auto mt-20">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold text-purple-400">Create New Thread</h2>
+          <button id="closeModalBtn" class="text-gray-400 hover:text-gray-200">
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+            </svg>
+          </button>
+        </div>
+
+        <form id="newThreadForm" class="space-y-4">
+          <!-- Privacy Notice (shown for private categories) -->
+          <div id="privacyNotice" class="hidden bg-purple-500/10 border border-purple-500/30 rounded-lg p-4 mb-4">
+            <div class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-purple-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+              </svg>
+              <div>
+                <p class="text-purple-400 font-semibold text-sm">Private Thread</p>
+                <p class="text-purple-200 text-sm mt-1">
+                  This thread will only be visible to you and forum administrators. Other members will not be able to see or access this thread.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium mb-2">Thread Title</label>
+            <input 
+              type="text" 
+              id="threadTitle" 
+              required
+              maxlength="200"
+              class="w-full px-4 py-2 bg-neutral-900 border border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              placeholder="Enter thread title..."
+            />
+          </div>
+
+          <div>
+            <label id="prefixLabel" class="block text-sm font-medium mb-2">Thread Prefixes (Optional)</label>
+            <div id="threadPrefixes" class="grid grid-cols-2 md:grid-cols-3 gap-2 p-4 bg-neutral-900 border border-neutral-700 rounded-lg max-h-48 overflow-y-auto">
+              <!-- Populated dynamically based on category type -->
+            </div>
+            <p id="prefixHelp" class="text-xs text-gray-400 mt-1">Select prefixes that best describe your thread</p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium mb-2">Content</label>
+            <!-- BBCode Toolbar -->
+            <div class="flex items-center space-x-1 p-2 bg-neutral-900 rounded-t-lg border border-neutral-700 border-b-0">
+              <button type="button" data-bbcode="b" class="p-2 text-gray-400 hover:text-gray-200 hover:bg-neutral-700 rounded transition-colors font-bold text-sm" title="Bold">
+                <span class="font-bold">B</span>
+              </button>
+              <button type="button" data-bbcode="i" class="p-2 text-gray-400 hover:text-gray-200 hover:bg-neutral-700 rounded transition-colors italic text-sm" title="Italic">
+                <span class="italic">I</span>
+              </button>
+              <button type="button" data-bbcode="u" class="p-2 text-gray-400 hover:text-gray-200 hover:bg-neutral-700 rounded transition-colors" title="Underline">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 16 16"><path d="M5.313 3.136h-1.23V9.54c0 2.105 1.47 3.623 3.917 3.623s3.917-1.518 3.917-3.623V3.136h-1.23v6.323c0 1.49-.978 2.57-2.687 2.57-1.709 0-2.687-1.08-2.687-2.57V3.136zM12.5 15h-9v-1h9v1z"/></svg>
+              </button>
+              <div class="w-px h-6 bg-neutral-600"></div>
+              <button type="button" data-bbcode="code" class="p-2 text-gray-400 hover:text-gray-200 hover:bg-neutral-700 rounded transition-colors" title="Code">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+              </button>
+              <button type="button" data-bbcode="url" class="p-2 text-gray-400 hover:text-gray-200 hover:bg-neutral-700 rounded transition-colors" title="Link">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+              </button>
+              <button type="button" data-bbcode="img" class="p-2 text-gray-400 hover:text-gray-200 hover:bg-neutral-700 rounded transition-colors" title="Image">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              </button>
+            </div>
+            <textarea 
+              id="threadContent" 
+              required
+              rows="8"
+              class="w-full px-4 py-2 bg-neutral-900 border border-neutral-700 rounded-b-lg focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+              placeholder="Write your post... Use the toolbar above for formatting."
+            ></textarea>
+            <div class="text-xs text-gray-400 mt-1">
+              <strong>Formatting:</strong> [b]bold[/b] [i]italic[/i] [u]underline[/u] [quote]quote[/quote] [code]code[/code] [url=link]text[/url] [img]url[/img]
+            </div>
+          </div>
+
+          <div class="flex gap-3 justify-end">
+            <button 
+              type="button" 
+              id="cancelThreadBtn"
+              class="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg transition"
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit"
+              class="px-6 py-2 bg-purple-500 hover:bg-purple-600 text-neutral-900 font-semibold rounded-lg transition"
+            >
+              Create Thread
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )}
+
+  <!-- Error Modal -->
+  <div id="error-modal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden" style="display: none; align-items: center; justify-content: center;">
+    <div class="bg-neutral-900 rounded-xl border border-red-700 p-6 w-full max-w-md mx-4">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
+          <svg class="w-6 h-6 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-red-400">Error</h3>
+      </div>
+      <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6">
+        <p id="error-message" class="text-red-200 text-sm"></p>
+      </div>
+      <button 
+        id="close-error-modal"
+        class="w-full px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold transition-colors"
+      >
+        OK
+      </button>
+    </div>
+  </div>
+
+  <Footer />
+
+  <script define:vars={{ categoryId, user }}>
+    let currentPage = 1;
+    let currentCategory = null;
+
+    // Load category info and threads
+    async function loadCategory() {
+      try {
+        const res = await fetch(`/forum/categories`);
+        const data = await res.json();
+        
+        if (!data.ok) throw new Error(data.error);
+
+        // Find the category (including subcategories)
+        const findCategory = (cats) => {
+          for (const cat of cats) {
+            if (cat.id === parseInt(categoryId)) return cat;
+            if (cat.children) {
+              const found = findCategory(cat.children);
+              if (found) return found;
+            }
+          }
+          return null;
+        };
+
+        currentCategory = findCategory(data.categories);
+        
+        if (!currentCategory) {
+          throw new Error('Category not found');
+        }
+
+        document.getElementById('categoryName').textContent = currentCategory.name;
+        document.getElementById('breadcrumbCategory').textContent = currentCategory.name;
+        if (currentCategory.description) {
+          document.getElementById('categoryDescription').textContent = currentCategory.description;
+        }
+
+        // Show privacy notice if category is private
+        const privacyNotice = document.getElementById('privacyNotice');
+        if (privacyNotice && currentCategory.is_private) {
+          privacyNotice.classList.remove('hidden');
+        }
+
+        // Check permissions for New Thread button
+        const btn = document.getElementById('newThreadBtn');
+        
+        if (btn) {
+          const isModerator = user?.roles?.some(r => r.toUpperCase() === 'MOD' || r.toUpperCase() === 'ADMIN');
+          const isAdmin = user?.roles?.some(r => r.toUpperCase() === 'ADMIN');
+          
+          // Locked category - only mods/admins can post
+          if (currentCategory.is_locked && !isModerator) {
+            btn.disabled = true;
+            btn.classList.remove('bg-purple-500', 'hover:bg-purple-600');
+            btn.classList.add('bg-gray-600', 'cursor-not-allowed', 'opacity-50');
+          }
+          // Announcement category - only admins can post
+          else if (currentCategory.is_announcement && !isAdmin) {
+            btn.disabled = true;
+            btn.classList.remove('bg-purple-500', 'hover:bg-purple-600');
+            btn.classList.add('bg-gray-600', 'cursor-not-allowed', 'opacity-50');
+          }
+        }
+
+        // Update prefix dropdown based on category type
+        updatePrefixOptions();
+        
+        // Update prefix label based on category type
+        const prefixLabel = document.getElementById('prefixLabel');
+        const prefixHelp = document.getElementById('prefixHelp');
+        if (prefixLabel && prefixHelp) {
+          if (currentCategory.is_announcement) {
+            prefixLabel.textContent = 'Thread Prefixes (Optional - No Limit)';
+            prefixHelp.textContent = 'Select all prefixes that describe your announcement';
+          } else {
+            prefixLabel.textContent = 'Thread Prefixes (Optional - Select up to 3)';
+            prefixHelp.textContent = 'Select up to 3 prefixes that best describe your thread';
+          }
+        }
+
+        loadThreads();
+      } catch (err) {
+        console.error('Error loading category:', err);
+        alert('Failed to load category');
+        window.location.href = '/forum';
+      }
+    }
+
+    async function loadThreads(page = 1) {
+      currentPage = page;
+      const container = document.getElementById('threadsContainer');
+      container.innerHTML = `
+        <div class="text-center py-8 text-gray-400">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400"></div>
+          <p class="mt-2">Loading threads...</p>
+        </div>
+      `;
+
+      try {
+        const sortSelect = document.getElementById('sortSelect');
+        const sortValue = sortSelect ? sortSelect.value : 'recent';
+        const res = await fetch(`/forum/threads?category_id=${categoryId}&page=${page}&pageSize=20&sort=${sortValue}`);
+        const data = await res.json();
+        
+        if (!data.ok) throw new Error(data.error);
+
+        document.getElementById('threadCount').textContent = data.total;
+        renderThreads(data.threads);
+        renderPagination(data.page, data.pageSize, data.total);
+      } catch (err) {
+        console.error('Error loading threads:', err);
+        container.innerHTML = `
+          <div class="text-center py-8 text-red-400">
+            <p>Failed to load threads. Please try again.</p>
+          </div>
+        `;
+      }
+    }
+
+    async function updatePrefixOptions() {
+      const prefixContainer = document.getElementById('threadPrefixes');
+      if (!prefixContainer || !currentCategory) return;
+
+      prefixContainer.innerHTML = '<div class="col-span-full text-center text-gray-400 text-sm">Loading prefixes...</div>';
+
+      try {
+        const prefixType = currentCategory.is_announcement ? 'announcement' : 'community';
+        const res = await fetch(`/api/forum/prefixes?type=${prefixType}`);
+        const data = await res.json();
+        
+        if (!data.ok || !data.prefixes) {
+          throw new Error('Failed to load prefixes');
+        }
+
+        // Create checkbox for each prefix with colored badges
+        prefixContainer.innerHTML = data.prefixes.map(prefix => {
+          // Extract Tailwind classes from color and text_color
+          const bgClass = prefix.color || 'bg-gray-500/20';
+          const textClass = prefix.text_color || 'text-gray-400';
+          const borderClass = bgClass.replace('/20', '/50').replace('bg-', 'border-');
+          
+          return `
+          <label class="flex items-center gap-2 p-2 rounded hover:bg-neutral-800 cursor-pointer transition group">
+            <input 
+              type="checkbox" 
+              name="prefix" 
+              value="${prefix.name}"
+              class="w-4 h-4 rounded border-neutral-600 bg-neutral-800 text-purple-500 focus:ring-2 focus:ring-purple-500 shrink-0"
+            />
+            <span class="inline-block px-2 py-0.5 text-xs font-semibold rounded border ${bgClass} ${textClass} ${borderClass} group-hover:scale-105 transition-transform">
+              ${prefix.name}
+            </span>
+          </label>
+        `;
+        }).join('');
+
+        // Limit to 3 selections for community categories only (no limit for announcements/news)
+        const isAnnouncement = currentCategory.is_announcement;
+        const maxPrefixes = isAnnouncement ? 999 : 3;
+        
+        const checkboxes = prefixContainer.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+          checkbox.addEventListener('change', () => {
+            const checkedCount = prefixContainer.querySelectorAll('input[type="checkbox"]:checked').length;
+            if (checkedCount >= maxPrefixes) {
+              // Disable unchecked boxes
+              checkboxes.forEach(cb => {
+                if (!cb.checked) cb.disabled = true;
+              });
+            } else {
+              // Re-enable all boxes
+              checkboxes.forEach(cb => cb.disabled = false);
+            }
+          });
+        });
+      } catch (err) {
+        console.error('Error loading prefixes:', err);
+        prefixContainer.innerHTML = '<div class="col-span-full text-center text-red-400 text-sm">Failed to load prefixes</div>';
+      }
+    }
+
+    function getPrefixBadge(prefixesString) {
+      if (!prefixesString) return '';
+      
+      const prefixes = prefixesString.split('|').filter(p => p.trim());
+      if (prefixes.length === 0) return '';
+      
+      const prefixStyles = {
+        // Community prefixes
+        'Guide': 'bg-green-500/20 text-green-400 border-green-500/50',
+        'Question': 'bg-blue-500/20 text-blue-400 border-blue-500/50',
+        'Discussion': 'bg-purple-500/20 text-purple-400 border-purple-500/50',
+        'PvP': 'bg-red-500/20 text-red-400 border-red-500/50',
+        'PvE': 'bg-purple-500/20 text-purple-400 border-purple-500/50',
+        'Bug': 'bg-orange-500/20 text-orange-400 border-orange-500/50',
+        'Suggestion': 'bg-teal-500/20 text-teal-400 border-teal-500/50',
+        // Announcement prefixes (matching news.json)
+        'Hotfix': 'bg-red-500/20 text-red-400 border-red-500/50',
+        'Event': 'bg-orange-500/20 text-orange-400 border-orange-500/50',
+        'Balance': 'bg-indigo-500/20 text-indigo-400 border-indigo-500/50',
+        'New Content': 'bg-green-500/20 text-green-400 border-green-500/50',
+        'PvP Updates': 'bg-blue-500/20 text-blue-400 border-blue-500/50',
+        'Performance': 'bg-purple-500/20 text-purple-400 border-purple-500/50',
+        'Guild System': 'bg-orange-500/20 text-orange-400 border-orange-500/50',
+        'Bug Fixes': 'bg-red-500/20 text-red-400 border-red-500/50',
+        'Stability': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50',
+        'Cosmetics': 'bg-pink-500/20 text-pink-400 border-pink-500/50',
+        'Classes': 'bg-cyan-500/20 text-cyan-400 border-cyan-500/50',
+        'Maintenance': 'bg-green-500/20 text-green-400 border-green-500/50'
+      };
+      
+      return prefixes.map(prefix => {
+        const style = prefixStyles[prefix] || 'bg-gray-500/20 text-gray-400 border-gray-500/50';
+        return `<span class="inline-block px-2 py-0.5 text-xs font-semibold rounded border ${style}">${prefix}</span>`;
+      }).join(' ');
+    }
+
+    function renderThreads(threads) {
+      const container = document.getElementById('threadsContainer');
+      
+      if (!threads || threads.length === 0) {
+        container.innerHTML = `
+          <div class="rounded-xl bg-neutral-900/80 ring-1 ring-neutral-800 p-8 text-center text-gray-400">
+            <p>No threads yet. Be the first to post!</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = threads.map(thread => {
+        const createdDate = new Date(thread.created_at);
+        const lastPostDate = thread.last_post_at ? new Date(thread.last_post_at) : createdDate;
+        const isPrivateThread = thread.title && thread.title.startsWith('🔒 Private Thread');
+        const canView = thread.can_view !== false; // true if not explicitly false
+        
+        return `
+          <a href="${canView ? `/forum/thread/${thread.id}` : '#'}" class="block rounded-lg bg-neutral-800/50 hover:bg-neutral-800 ring-1 ring-neutral-700/50 p-4 transition group ${!canView ? 'opacity-60 cursor-not-allowed' : ''}">
+            <div class="flex items-start gap-4">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                  ${thread.is_private_category ? '<svg class="w-4 h-4 text-purple-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>' : ''}
+                  ${thread.pinned ? '<svg class="w-4 h-4 text-purple-400" fill="currentColor" viewBox="0 0 384 512"><path d="M32 32C32 14.3 46.3 0 64 0H320c17.7 0 32 14.3 32 32s-14.3 32-32 32H290.5l11.4 148.2c36.7 19.9 65.7 53.2 79.5 94.7l1 3c3.3 9.8 1.6 20.5-4.4 28.8s-15.7 13.3-26 13.3H32c-10.3 0-19.9-4.9-26-13.3s-7.7-19.1-4.4-28.8l1-3c13.8-41.5 42.8-74.8 79.5-94.7L93.5 64H64C46.3 64 32 49.7 32 32zM160 384h64v96c0 17.7-14.3 32-32 32s-32-14.3-32-32V384z"/></svg>' : ''}
+                  ${thread.locked ? '<svg class="w-4 h-4 text-red-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>' : ''}
+                  ${getPrefixBadge(thread.prefixes)}
+                  <h3 class="font-semibold text-gray-100 group-hover:text-purple-400 transition truncate">${thread.title}</h3>
+                </div>
+                <div class="flex items-center gap-3 text-sm text-gray-400 flex-wrap">
+                  <span>by ${thread.author_name}</span>
+                  ${getSmallRoleBadges(thread.author_roles)}
+                  <span>•</span>
+                  <span>${formatDate(createdDate)}</span>
+                </div>
+              </div>
+              
+              <div class="flex gap-6 text-center shrink-0">
+                <div>
+                  <div class="text-sm font-semibold text-sky-400">${thread.reply_count}</div>
+                  <div class="text-xs text-gray-500">Replies</div>
+                </div>
+                <div>
+                  <div class="text-sm font-semibold text-green-400">${thread.view_count}</div>
+                  <div class="text-xs text-gray-500">Views</div>
+                </div>
+              </div>
+            </div>
+          </a>
+        `;
+      }).join('');
+    }
+
+    function renderPagination(page, pageSize, total) {
+      const totalPages = Math.ceil(total / pageSize);
+      if (totalPages <= 1) {
+        document.getElementById('paginationContainer').innerHTML = '';
+        return;
+      }
+
+      const container = document.getElementById('paginationContainer');
+      let html = '<div class="flex justify-center gap-2">';
+      
+      // Previous button
+      html += `<button onclick="loadThreads(${page - 1})" ${page === 1 ? 'disabled' : ''} class="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition">Previous</button>`;
+      
+      // Page numbers (show current, +/- 2 pages)
+      for (let i = Math.max(1, page - 2); i <= Math.min(totalPages, page + 2); i++) {
+        html += `<button onclick="loadThreads(${i})" class="px-4 py-2 ${i === page ? 'bg-purple-500 text-neutral-900' : 'bg-neutral-800 hover:bg-neutral-700'} rounded-lg transition">${i}</button>`;
+      }
+      
+      // Next button
+      html += `<button onclick="loadThreads(${page + 1})" ${page === totalPages ? 'disabled' : ''} class="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition">Next</button>`;
+      html += '</div>';
+      
+      container.innerHTML = html;
+    }
+
+    function getSmallRoleBadges(rolesString) {
+      const roles = rolesString ? rolesString.split(',').map(r => r.trim().toUpperCase()) : [];
+      let badges = '';
+      
+      if (roles.includes('ADMIN')) {
+        badges += '<span class="px-1.5 py-0.5 bg-red-500/20 text-red-400 text-xs font-semibold rounded">ADMIN</span>';
+      }
+      if (roles.includes('MOD')) {
+        badges += '<span class="px-1.5 py-0.5 bg-purple-500/20 text-purple-400 text-xs font-semibold rounded">MOD</span>';
+      }
+      // For thread list, don't show MEMBER badge to keep it cleaner
+      // Only show special roles (ADMIN/MOD)
+      
+      return badges;
+    }
+
+    function formatDate(date) {
+      const now = new Date();
+      const diff = now - date;
+      const seconds = Math.floor(diff / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
+
+      if (days > 7) return date.toLocaleDateString();
+      if (days > 0) return `${days}d ago`;
+      if (hours > 0) return `${hours}h ago`;
+      if (minutes > 0) return `${minutes}m ago`;
+      return 'just now';
+    }
+
+    // Modal handlers
+    const modal = document.getElementById('newThreadModal');
+    const newThreadBtn = document.getElementById('newThreadBtn');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const cancelThreadBtn = document.getElementById('cancelThreadBtn');
+
+    if (newThreadBtn) {
+      newThreadBtn.addEventListener('click', () => {
+        // Don't open modal if button is disabled
+        if (!newThreadBtn.disabled) {
+          modal.style.display = 'flex';
+        }
+      });
+    }
+
+    if (closeModalBtn) {
+      closeModalBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+      });
+    }
+
+    if (cancelThreadBtn) {
+      cancelThreadBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+      });
+    }
+
+    // BBCode Toolbar Functionality
+    const bbcodeButtons = document.querySelectorAll('[data-bbcode]');
+    const threadContentTextarea = document.getElementById('threadContent');
+    
+    bbcodeButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const tag = button.dataset.bbcode;
+        const textarea = threadContentTextarea;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selectedText = textarea.value.substring(start, end);
+        let replacement = '';
+        
+        switch(tag) {
+          case 'b':
+          case 'i':
+          case 'u':
+          case 'code':
+          case 'quote':
+            replacement = `[${tag}]${selectedText || 'text'}[/${tag}]`;
+            break;
+          case 'url':
+            const url = selectedText || prompt('Enter URL:');
+            if (url) {
+              const linkText = selectedText ? selectedText : prompt('Enter link text:') || url;
+              replacement = `[url=${url}]${linkText}[/url]`;
+            }
+            break;
+          case 'img':
+            const imgUrl = selectedText || prompt('Enter image URL:');
+            if (imgUrl) replacement = `[img]${imgUrl}[/img]`;
+            break;
+        }
+        
+        if (replacement) {
+          textarea.value = textarea.value.substring(0, start) + replacement + textarea.value.substring(end);
+          const newPos = start + replacement.length;
+          textarea.focus();
+          textarea.setSelectionRange(newPos, newPos);
+        }
+      });
+    });
+
+    // Form submission
+    const form = document.getElementById('newThreadForm');
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const title = document.getElementById('threadTitle').value;
+        const content = document.getElementById('threadContent').value;
+        
+        // Collect selected prefixes
+        const selectedPrefixes = Array.from(
+          document.querySelectorAll('#threadPrefixes input[type="checkbox"]:checked')
+        ).map(cb => cb.value);
+
+        try {
+          const res = await fetch('/forum/threads', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              category_id: parseInt(categoryId),
+              title,
+              content,
+              prefixes: selectedPrefixes
+            })
+          });
+
+          const data = await res.json();
+          
+          if (!data.ok) {
+            throw new Error(data.error);
+          }
+
+          // Success! Redirect to the new thread
+          window.location.href = `/forum/thread/${data.thread_id}`;
+        } catch (err) {
+          console.error('Error creating thread:', err);
+          showErrorModal(err.message || 'Failed to create thread. Please try again.');
+        }
+      });
+    }
+
+    // Modal helper functions
+    function showErrorModal(message) {
+      const modal = document.getElementById('error-modal');
+      const messageEl = document.getElementById('error-message');
+      messageEl.textContent = message;
+      modal.style.display = 'flex';
+    }
+
+    function hideErrorModal() {
+      const modal = document.getElementById('error-modal');
+      modal.style.display = 'none';
+    }
+
+    // Close error modal handler
+    document.getElementById('close-error-modal')?.addEventListener('click', hideErrorModal);
+
+    // Make loadThreads available globally for pagination
+    window.loadThreads = loadThreads;
+
+    // Sort dropdown change handler
+    const sortSelect = document.getElementById('sortSelect');
+    if (sortSelect) {
+      sortSelect.addEventListener('change', () => {
+        loadThreads(1); // Reset to page 1 when sorting changes
+      });
+    }
+
+    // Load on page load
+    loadCategory();
+  </script>
+</body>
+</html>

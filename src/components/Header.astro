@@ -1,0 +1,54 @@
+---
+interface Props {
+  username: string;
+  currentAvatar: string;
+  roles?: string[]; // e.g. ['admin', 'moderator']
+}
+
+const { username, currentAvatar, roles = [] } = Astro.props;
+const has = (r: string) => roles.map((x) => x.toLowerCase()).includes(r);
+---
+
+<!-- Topbar -->
+<header
+  class="h-16 flex items-center justify-end px-6 border-b border-neutral-800 bg-neutral-900/80 backdrop-blur"
+>
+  <div class="flex items-center gap-3">
+    <span class="text-sm text-gray-400">
+      Welcome, <span class="text-sky-400 font-semibold">{username}</span>
+    </span>
+    <div class="flex items-center space-x-2">
+      {
+        has("admin") && (
+          <span class="px-2 py-0.5 bg-red-500/20 text-red-400 text-xs font-semibold rounded">
+            ADMIN
+          </span>
+        )
+      }
+      {
+        has("mod") && (
+          <span class="px-2 py-0.5 bg-purple-500/20 text-purple-400 text-xs font-semibold rounded">
+            MOD
+          </span>
+        )
+      }
+      {
+        (!roles.length || (roles.length === 1 && has("member"))) && (
+          <span class="px-2 py-0.5 bg-slate-500/20 text-slate-300 text-xs font-semibold rounded">
+            MEMBER
+          </span>
+        )
+      }
+    </div>
+    <button
+      id="profile-image-btn"
+      class="w-8 h-8 rounded-full border border-neutral-700 hover:border-purple-500 transition-colors overflow-hidden"
+    >
+      <img
+        src={currentAvatar}
+        alt="Avatar"
+        class="w-full h-full object-cover"
+      />
+    </button>
+  </div>
+</header>

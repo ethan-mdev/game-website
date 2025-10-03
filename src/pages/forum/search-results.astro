@@ -1,0 +1,240 @@
+---
+// Forum Search Results Page
+import "../../styles/global.css";
+import Navbar from "../../components/Navbar.astro";
+import Footer from "../../components/Footer.astro";
+import { validateSession } from "../../lib/session";
+
+export const prerender = false;
+
+const user = await validateSession(Astro.request);
+const searchQuery = Astro.url.searchParams.get("q") || "";
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width" />
+  <link rel="icon" href="/icon-512-square.png" />
+  <title>Search Results - Game Forums</title>
+</head>
+<body class="bg-neutral-900 text-gray-100 font-sans min-h-screen">
+  <Navbar currentPage="forum" />
+  
+  <div class="container mx-auto px-4 py-8 max-w-6xl">
+    <!-- Breadcrumb Navigation -->
+    <div class="mb-6">
+      <div class="flex items-center gap-2 text-sm">
+        <a href="/forum" class="text-purple-400 hover:text-purple-300">Forums</a>
+        <span class="text-gray-600">/</span>
+        <span class="text-gray-400">Search Results</span>
+      </div>
+    </div>
+
+    <!-- Search Header -->
+    <div class="rounded-xl bg-neutral-900/80 ring-1 ring-neutral-800 mb-6 p-6">
+      <h1 class="text-3xl font-bold text-purple-400 mb-4">Search Results</h1>
+      
+      <div class="flex gap-3">
+        <input 
+          type="text" 
+          placeholder="Search forums..." 
+          class="flex-1 px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+          id="searchInput"
+          value={searchQuery}
+        />
+        <button 
+          id="searchBtn"
+          class="px-6 py-3 bg-purple-500 hover:bg-purple-600 text-neutral-900 font-semibold rounded-lg transition"
+        >
+          Search
+        </button>
+      </div>
+
+      <div id="searchInfo" class="mt-4 text-gray-400"></div>
+    </div>
+
+    <!-- Results Container -->
+    <div id="resultsContainer" class="space-y-3">
+      <div class="text-center py-8 text-gray-400">
+        <p>Enter a search term to find threads and posts</p>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div id="paginationContainer" class="mt-6"></div>
+  </div>
+
+  <Footer />
+
+  <script define:vars={{ searchQuery }}>
+    let currentPage = 1;
+    let currentQuery = searchQuery;
+
+    async function performSearch(query, page = 1) {
+      if (!query || query.trim().length < 2) {
+        document.getElementById('resultsContainer').innerHTML = `
+          <div class="rounded-xl bg-neutral-900/80 ring-1 ring-neutral-800 p-8 text-center text-gray-400">
+            <p>Please enter at least 2 characters to search</p>
+          </div>
+        `;
+        document.getElementById('searchInfo').innerHTML = '';
+        document.getElementById('paginationContainer').innerHTML = '';
+        return;
+      }
+
+      currentPage = page;
+      currentQuery = query;
+
+      const container = document.getElementById('resultsContainer');
+      container.innerHTML = `
+        <div class="text-center py-8 text-gray-400">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400"></div>
+          <p class="mt-2">Searching...</p>
+        </div>
+      `;
+
+      try {
+        const res = await fetch(`/forum/search?q=${encodeURIComponent(query)}&page=${page}&pageSize=20`);
+        const data = await res.json();
+        
+        if (!data.ok) {
+          throw new Error(data.error || 'Search failed');
+        }
+
+        document.getElementById('searchInfo').innerHTML = `
+          Found <span class="text-purple-400 font-semibold">${data.total}</span> result${data.total !== 1 ? 's' : ''} for "<span class="text-purple-400">${escapeHtml(query)}</span>"
+        `;
+
+        renderResults(data.results);
+        renderPagination(data.page, data.pageSize, data.total);
+
+        // Update URL
+        window.history.pushState({}, '', `/forum/search-results?q=${encodeURIComponent(query)}&page=${page}`);
+      } catch (err) {
+        console.error('Search error:', err);
+        container.innerHTML = `
+          <div class="rounded-xl bg-neutral-900/80 ring-1 ring-neutral-800 p-8 text-center text-red-400">
+            <p>Search failed: ${err.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    function renderResults(results) {
+      const container = document.getElementById('resultsContainer');
+      
+      if (!results || results.length === 0) {
+        container.innerHTML = `
+          <div class="rounded-xl bg-neutral-900/80 ring-1 ring-neutral-800 p-8 text-center text-gray-400">
+            <p>No results found. Try different search terms.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = results.map(result => {
+        const createdDate = new Date(result.created_at);
+        
+        return `
+          <a href="/forum/thread/${result.id}" class="block rounded-lg bg-neutral-800/50 hover:bg-neutral-800 ring-1 ring-neutral-700/50 p-4 transition group">
+            <div class="flex items-start justify-between gap-4">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="text-xs px-2 py-0.5 ${result.result_type === 'thread' ? 'bg-purple-500/20 text-purple-400' : 'bg-violet-500/20 text-violet-400'} rounded">
+                    ${result.result_type === 'thread' ? 'Thread Title' : 'Post Content'}
+                  </span>
+                  <h3 class="font-semibold text-gray-100 group-hover:text-purple-400 transition truncate">${result.title}</h3>
+                </div>
+                <p class="text-sm text-gray-400 mb-2 line-clamp-2">${escapeHtml(result.match_text)}</p>
+                <div class="flex items-center gap-3 text-xs text-gray-500">
+                  <span>by ${result.author_name}</span>
+                  <span>•</span>
+                  <span>${formatDate(createdDate)}</span>
+                </div>
+              </div>
+              
+              <div class="flex gap-4 text-center shrink-0 text-xs">
+                <div>
+                  <div class="font-semibold text-purple-400">${result.reply_count}</div>
+                  <div class="text-gray-500">Replies</div>
+                </div>
+                <div>
+                  <div class="font-semibold text-green-400">${result.view_count}</div>
+                  <div class="text-gray-500">Views</div>
+                </div>
+              </div>
+            </div>
+          </a>
+        `;
+      }).join('');
+    }
+
+    function renderPagination(page, pageSize, total) {
+      const totalPages = Math.ceil(total / pageSize);
+      if (totalPages <= 1) {
+        document.getElementById('paginationContainer').innerHTML = '';
+        return;
+      }
+
+      const container = document.getElementById('paginationContainer');
+      let html = '<div class="flex justify-center gap-2">';
+      
+      html += `<button onclick="performSearch('${currentQuery}', ${page - 1})" ${page === 1 ? 'disabled' : ''} class="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition">Previous</button>`;
+      
+      for (let i = Math.max(1, page - 2); i <= Math.min(totalPages, page + 2); i++) {
+        html += `<button onclick="performSearch('${currentQuery}', ${i})" class="px-4 py-2 ${i === page ? 'bg-purple-500 text-neutral-900' : 'bg-neutral-800 hover:bg-neutral-700'} rounded-lg transition">${i}</button>`;
+      }
+      
+      html += `<button onclick="performSearch('${currentQuery}', ${page + 1})" ${page === totalPages ? 'disabled' : ''} class="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition">Next</button>`;
+      html += '</div>';
+      
+      container.innerHTML = html;
+    }
+
+    function formatDate(date) {
+      const now = new Date();
+      const diff = now - date;
+      const seconds = Math.floor(diff / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
+
+      if (days > 7) return date.toLocaleDateString();
+      if (days > 0) return `${days}d ago`;
+      if (hours > 0) return `${hours}h ago`;
+      if (minutes > 0) return `${minutes}m ago`;
+      return 'just now';
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Make performSearch globally available
+    window.performSearch = performSearch;
+
+    // Search button handler
+    document.getElementById('searchBtn').addEventListener('click', () => {
+      const query = document.getElementById('searchInput').value;
+      performSearch(query, 1);
+    });
+
+    // Enter key handler
+    document.getElementById('searchInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        const query = document.getElementById('searchInput').value;
+        performSearch(query, 1);
+      }
+    });
+
+    // Perform initial search if query exists
+    if (currentQuery && currentQuery.trim().length >= 2) {
+      performSearch(currentQuery, 1);
+    }
+  </script>
+</body>
+</html>

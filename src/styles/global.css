@@ -1,0 +1,111 @@
+@import "tailwindcss";
+
+@layer base {
+    html {
+        scroll-behavior: smooth;
+    }
+    body {
+        margin: 0;
+    }
+}
+
+@layer components {
+    /* Gradient Role Badges */
+    .role-gradient-rainbow {
+        background: linear-gradient(90deg, #ff0080, #ff8c00, #40e0d0, #9400d3, #ff0080);
+        background-size: 300% 100%;
+        animation: gradient-shift 3s ease infinite;
+        color: white;
+        font-weight: 600;
+    }
+    
+    .role-gradient-fire {
+        background: linear-gradient(90deg, #ff0000, #ff6600, #ffcc00);
+        background-size: 200% 100%;
+        animation: gradient-shift 2s ease infinite;
+        color: white;
+        font-weight: 600;
+    }
+    
+    .role-gradient-ocean {
+        background: linear-gradient(90deg, #0066ff, #00ccff, #0066ff);
+        background-size: 200% 100%;
+        animation: gradient-shift 3s ease infinite;
+        color: white;
+        font-weight: 600;
+    }
+    
+    .role-gradient-toxic {
+        background: linear-gradient(90deg, #39ff14, #00ff00, #39ff14);
+        background-size: 200% 100%;
+        animation: gradient-shift 2s ease infinite;
+        color: #000;
+        font-weight: 600;
+    }
+    
+    .role-gradient-sunset {
+        background: linear-gradient(90deg, #ff4500, #ff8c00, #ffd700, #ff8c00, #ff4500);
+        background-size: 300% 100%;
+        animation: gradient-shift 4s ease infinite;
+        color: white;
+        font-weight: 600;
+    }
+    
+    .role-gradient-purple-pink {
+        background: linear-gradient(90deg, #7928ca, #ff0080, #7928ca);
+        background-size: 200% 100%;
+        animation: gradient-shift 3s ease infinite;
+        color: white;
+        font-weight: 600;
+    }
+
+    /* Animated Role Badges */
+    .role-glow {
+        animation: glow-pulse 2s ease-in-out infinite;
+    }
+    
+    .role-shimmer {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .role-shimmer::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        animation: shimmer 2s infinite;
+    }
+    
+    /* Animations */
+    @keyframes gradient-shift {
+        0%, 100% {
+            background-position: 0% 50%;
+        }
+        50% {
+            background-position: 100% 50%;
+        }
+    }
+    
+    @keyframes glow-pulse {
+        0%, 100% {
+            box-shadow: 0 0 5px currentColor, 0 0 10px currentColor;
+        }
+        50% {
+            box-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor;
+        }
+    }
+    
+    @keyframes shimmer {
+        0% {
+            left: -100%;
+        }
+        100% {
+            left: 100%;
+        }
+    }
+}
+

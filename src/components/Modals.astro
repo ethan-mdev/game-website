@@ -1,0 +1,593 @@
+---
+interface Props {
+    avatarImages: string[];
+}
+
+const { avatarImages } = Astro.props;
+---
+
+<style>
+    .legendary-glow {
+        animation: legendary-pulse 2s ease-in-out infinite;
+        box-shadow:
+            0 0 20px rgba(251, 191, 36, 0.3),
+            0 0 40px rgba(251, 191, 36, 0.2),
+            0 0 60px rgba(251, 191, 36, 0.1);
+    }
+
+    @keyframes legendary-pulse {
+        0%,
+        100% {
+            box-shadow:
+                0 0 20px rgba(251, 191, 36, 0.3),
+                0 0 40px rgba(251, 191, 36, 0.2),
+                0 0 60px rgba(251, 191, 36, 0.1);
+        }
+        50% {
+            box-shadow:
+                0 0 30px rgba(251, 191, 36, 0.5),
+                0 0 60px rgba(251, 191, 36, 0.3),
+                0 0 90px rgba(251, 191, 36, 0.2);
+        }
+    }
+</style>
+
+<!-- Sign Out Confirmation Modal -->
+<div
+    id="signout-modal"
+    class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 hidden"
+>
+    <div
+        class="bg-neutral-900 rounded-xl border border-neutral-700 p-6 w-full max-w-md"
+    >
+        <h3 class="text-lg font-semibold mb-4">Sign Out</h3>
+        <p class="text-gray-400 mb-6">Are you sure you want to sign out?</p>
+        <div class="flex gap-3">
+            <button
+                id="cancel-signout"
+                class="flex-1 px-4 py-2 rounded-lg border border-neutral-700 text-gray-300 hover:bg-neutral-800 transition-colors"
+            >
+                Cancel
+            </button>
+            <button
+                id="confirm-signout"
+                class="flex-1 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors"
+            >
+                Sign Out
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Unstuck Confirmation Modal -->
+<div
+    id="unstuck-modal"
+    class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 hidden"
+>
+    <div
+        class="bg-neutral-900 rounded-xl border border-neutral-700 p-6 w-full max-w-md"
+    >
+        <h3 class="text-lg font-semibold mb-4">Unstuck Character</h3>
+        <div class="mb-6">
+            <p class="text-gray-400 mb-3">
+                You are about to unstuck <span
+                    id="unstuck-character-name"
+                    class="text-purple-400 font-semibold"></span>.
+            </p>
+            <div
+                class="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4"
+            >
+                <div class="flex items-start gap-2">
+                    <svg
+                        class="w-5 h-5 text-purple-400 mt-0.5 flex-shrink-0"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                    >
+                        <path
+                            fill-rule="evenodd"
+                            d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                            clip-rule="evenodd"></path>
+                    </svg>
+                    <div>
+                        <p class="text-purple-400 font-semibold text-sm">
+                            Important:
+                        </p>
+                        <p class="text-purple-200 text-sm">
+                            Make sure your character is logged off before using
+                            this feature.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="flex gap-3">
+            <button
+                id="cancel-unstuck"
+                class="flex-1 px-4 py-2 rounded-lg border border-neutral-700 text-gray-300 hover:bg-neutral-800 transition-colors"
+            >
+                Cancel
+            </button>
+            <button
+                id="confirm-unstuck"
+                class="flex-1 px-4 py-2 rounded-lg bg-purple-500 hover:bg-purple-600 text-white transition-colors"
+            >
+                Unstuck Character
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Profile Image Selection Modal -->
+<div
+    id="profile-modal"
+    class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 hidden"
+>
+    <div
+        class="bg-neutral-900 rounded-xl border border-neutral-700 p-6 w-full max-w-lg"
+    >
+        <h3 class="text-lg font-semibold mb-4">Choose Profile Image</h3>
+        <div class="grid grid-cols-4 gap-4 mb-6 max-h-80 overflow-y-auto">
+            {
+                avatarImages.map((avatar) => (
+                    <button
+                        class="profile-option w-16 h-16 rounded-full border-2 border-neutral-700 hover:border-purple-500 transition-colors overflow-hidden"
+                        data-avatar={avatar}
+                    >
+                        <img
+                            src={`/avatars/${avatar}`}
+                            alt="Avatar option"
+                            class="w-full h-full object-cover"
+                        />
+                    </button>
+                ))
+            }
+        </div>
+        <div class="flex gap-3">
+            <button
+                id="cancel-profile"
+                class="flex-1 px-4 py-2 rounded-lg border border-neutral-700 text-gray-300 hover:bg-neutral-800 transition-colors"
+            >
+                Cancel
+            </button>
+            <button
+                id="save-profile"
+                class="flex-1 px-4 py-2 rounded-lg bg-purple-500 hover:bg-purple-600 text-white transition-colors"
+                disabled
+            >
+                Save
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Purchase Confirmation Modal -->
+<div
+    id="purchase-modal"
+    class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 hidden"
+>
+    <div
+        class="bg-neutral-900 rounded-xl border border-neutral-700 p-6 w-full max-w-md"
+    >
+        <h3 class="text-lg font-semibold mb-4">Confirm Purchase</h3>
+        <div class="mb-6">
+            <div class="bg-neutral-800/50 rounded-lg p-4 mb-4">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-300">Item:</span>
+                    <span
+                        id="purchase-item-name"
+                        class="text-white font-semibold"></span>
+                </div>
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-300">Quantity:</span>
+                    <span
+                        id="purchase-quantity"
+                        class="text-purple-400 font-semibold"></span>
+                </div>
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-300">Unit Price:</span>
+                    <span id="purchase-unit-price" class="text-gray-300"></span>
+                </div>
+                <hr class="border-neutral-700 my-3" />
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-200 font-semibold">Total Cost:</span>
+                    <span
+                        id="purchase-total-price"
+                        class="text-purple-400 font-bold text-lg"></span>
+                </div>
+            </div>
+            <div
+                class="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4"
+            >
+                <div class="flex items-start gap-2">
+                    <svg
+                        class="w-5 h-5 text-purple-400 mt-0.5 flex-shrink-0"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                    >
+                        <path
+                            fill-rule="evenodd"
+                            d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                            clip-rule="evenodd"></path>
+                    </svg>
+                    <div>
+                        <p class="text-purple-400 font-semibold text-sm">
+                            Confirm Purchase:
+                        </p>
+                        <p class="text-purple-200 text-sm">
+                            This item will be delivered to your in-game
+                            inventory.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="flex gap-3">
+            <button
+                id="cancel-purchase"
+                class="flex-1 px-4 py-2 rounded-lg border border-neutral-700 text-gray-300 hover:bg-neutral-800 transition-colors"
+            >
+                Cancel
+            </button>
+            <button
+                id="confirm-purchase"
+                class="flex-1 px-4 py-2 rounded-lg bg-purple-500 hover:bg-purple-600 text-white transition-colors"
+            >
+                Purchase
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Purchase Success Modal -->
+<div
+    id="success-modal"
+    class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 hidden"
+>
+    <div
+        class="bg-neutral-900 rounded-xl border border-neutral-700 p-6 w-full max-w-md"
+    >
+        <div class="text-center mb-6">
+            <!-- Success Icon -->
+            <div
+                class="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4"
+            >
+                <svg
+                    class="w-8 h-8 text-green-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-green-400 mb-2">
+                Purchase Successful!
+            </h3>
+            <p id="success-message" class="text-gray-300"></p>
+        </div>
+        <div
+            class="bg-green-500/10 border border-green-500/30 rounded-lg p-4 mb-6"
+        >
+            <div class="flex items-start gap-2">
+                <svg
+                    class="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    ></path>
+                </svg>
+                <div>
+                    <p class="text-green-400 font-semibold">Item Delivered</p>
+                    <p class="text-green-200 text-sm">
+                        Check your in-game inventory to find your new item!
+                    </p>
+                </div>
+            </div>
+        </div>
+        <button
+            id="close-success"
+            class="w-full px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white transition-colors"
+        >
+            Great!
+        </button>
+    </div>
+</div>
+
+<!-- Crate Opening Modal -->
+<div
+    id="crate-opening-modal"
+    class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 hidden"
+>
+    <div
+        class="bg-neutral-900 rounded-xl border border-neutral-700 p-6 w-full max-w-2xl"
+    >
+        <h3 class="text-xl font-semibold mb-4">
+            Opening <span id="crate-name"></span>
+        </h3>
+
+        <!-- Opening Animation -->
+        <div id="opening-animation" class="text-center py-12">
+            <div
+                class="w-24 h-24 bg-gradient-to-br from-purple-400 to-orange-500 rounded-xl flex items-center justify-center mx-auto mb-4 animate-pulse"
+            >
+                <svg
+                    class="w-12 h-12 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                    ></path>
+                </svg>
+            </div>
+            <p class="text-gray-300">Opening crate...</p>
+        </div>
+
+        <!-- Results -->
+        <div id="crate-results" class="hidden">
+            <div
+                class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"
+                id="crate-items"
+            >
+                <!-- Results will be displayed here -->
+            </div>
+
+            <!-- Pity Information -->
+            <div class="bg-neutral-800/50 rounded-lg p-4 mb-6">
+                <h4 class="font-semibold mb-2">Pity Protection Status</h4>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <span class="text-gray-400">Rare+ guaranteed in:</span>
+                        <span
+                            id="rare-pity"
+                            class="text-blue-400 font-semibold ml-2"></span>
+                    </div>
+                    <div>
+                        <span class="text-gray-400"
+                            >Legendary guaranteed in:</span
+                        >
+                        <span
+                            id="legendary-pity"
+                            class="text-purple-400 font-semibold ml-2"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button
+                    id="close-crate-results"
+                    class="flex-1 px-4 py-2 rounded-lg bg-purple-500 hover:bg-purple-600 text-white transition-colors"
+                >
+                    Awesome!
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Credit Purchase Confirmation Modal -->
+<div
+    id="credit-purchase-modal"
+    class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 hidden"
+>
+    <div
+        class="bg-neutral-900 rounded-xl border border-neutral-700 p-6 w-full max-w-md"
+    >
+        <h3 class="text-lg font-semibold mb-4">Confirm Credit Purchase</h3>
+        <div class="mb-6">
+            <div class="bg-neutral-800/50 rounded-lg p-4 mb-4">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-300">Package:</span>
+                    <span
+                        id="credit-package-name"
+                        class="text-white font-semibold"></span>
+                </div>
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-300">Base Credits:</span>
+                    <span
+                        id="credit-base-amount"
+                        class="text-purple-400 font-semibold"></span>
+                </div>
+                <div
+                    class="flex items-center justify-between mb-2"
+                    id="credit-bonus-row"
+                >
+                    <span class="text-gray-300">Bonus Credits:</span>
+                    <span
+                        id="credit-bonus-amount"
+                        class="text-green-400 font-semibold"></span>
+                </div>
+                <hr class="border-neutral-700 my-3" />
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-purple-400 font-bold">Total Credits:</span>
+                    <span
+                        id="credit-total-amount"
+                        class="text-purple-400 font-bold text-lg"></span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-200 font-semibold">Price:</span>
+                    <span
+                        id="credit-price"
+                        class="text-green-400 font-bold text-lg"></span>
+                </div>
+            </div>
+            <div
+                class="bg-green-500/10 border border-green-500/30 rounded-lg p-4"
+            >
+                <div class="flex items-start gap-2">
+                    <svg
+                        class="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                    >
+                        <path
+                            fill-rule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clip-rule="evenodd"></path>
+                    </svg>
+                    <div>
+                        <p class="text-green-400 font-semibold text-sm">
+                            Secure Payment:
+                        </p>
+                        <p class="text-green-200 text-sm">
+                            Credits will be added to your account immediately
+                            after purchase.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="flex gap-3">
+            <button
+                id="cancel-credit-purchase"
+                class="flex-1 px-4 py-2 rounded-lg border border-neutral-700 text-gray-300 hover:bg-neutral-800 transition-colors"
+            >
+                Cancel
+            </button>
+            <button
+                id="confirm-credit-purchase"
+                class="flex-1 px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white transition-colors"
+            >
+                Purchase Credits
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Credit Purchase Success Modal -->
+<div
+    id="credit-success-modal"
+    class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 hidden"
+>
+    <div
+        class="bg-neutral-900 rounded-xl border border-neutral-700 p-6 w-full max-w-md"
+    >
+        <div class="text-center mb-6">
+            <!-- Success Icon -->
+            <div
+                class="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4"
+            >
+                <svg
+                    class="w-8 h-8 text-green-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-green-400 mb-2">
+                Purchase Successful!
+            </h3>
+            <p id="credit-success-message" class="text-gray-300"></p>
+        </div>
+        <div
+            class="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4 mb-6"
+        >
+            <div class="flex items-start gap-2">
+                <svg
+                    class="w-5 h-5 text-purple-400 mt-0.5 flex-shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                    ></path>
+                </svg>
+                <div>
+                    <p class="text-purple-400 font-semibold">Credits Added</p>
+                    <p class="text-purple-200 text-sm">
+                        Your credits have been added to your account balance!
+                    </p>
+                </div>
+            </div>
+        </div>
+        <button
+            id="close-credit-success"
+            class="w-full px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white transition-colors"
+        >
+            Awesome!
+        </button>
+    </div>
+</div>
+
+<!-- Crate Contents Modal -->
+<div
+    id="crate-contents-modal"
+    class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden"
+    style="display: none; align-items: center; justify-content: center;"
+>
+    <div
+        class="bg-neutral-900 border border-neutral-800 rounded-xl p-6 w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto"
+    >
+        <div class="flex items-center justify-between mb-6">
+            <h3
+                class="text-xl font-semibold text-gray-200"
+                id="crate-contents-title"
+            >
+                Crate Contents
+            </h3>
+            <button
+                id="close-crate-contents"
+                class="text-gray-400 hover:text-gray-200 transition-colors"
+            >
+                <svg
+                    class="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Loading State -->
+        <div id="crate-contents-loading" class="text-center py-8">
+            <div
+                class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"
+            >
+            </div>
+            <p class="text-gray-400">Loading crate contents...</p>
+        </div>
+
+        <!-- Contents List -->
+        <div id="crate-contents-list" class="hidden">
+            <p class="text-gray-400 mb-4">
+                This crate contains the following items:
+            </p>
+            <div
+                id="crate-contents-items"
+                class="grid grid-cols-1 md:grid-cols-2 gap-3"
+            >
+                <!-- Items will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,37 @@
+---
+export const prerender = false;
+import "../styles/global.css";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+import Downloads from "../components/Downloads.astro";
+import FAQSection from "../components/FAQ.astro";
+
+const links = {
+    direct: "/downloads/Game-Setup-x64.exe",
+    gdrive: "https://drive.google.com/your-file",
+    mega: "https://mega.nz/your-file",
+};
+---
+
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <meta name="generator" content={Astro.generator} />
+        <title>Astro Basics</title>
+    </head>
+    <body class="bg-neutral-900 min-h-screen flex flex-col">
+        <Navbar currentPage="download" />
+        <main class="flex-1 flex flex-col">
+            <Downloads
+                direct={links.direct}
+                gdrive={links.gdrive}
+                mega={links.mega}
+            />
+            <FAQSection />
+        </main>
+        <Footer />
+    </body>
+</html>
